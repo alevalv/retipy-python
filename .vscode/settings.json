@@ -1,0 +1,12 @@
+{
+    "cSpell.words": [
+        "imread",
+        "imshow",
+        "imwrite",
+        "isfile"
+    ],
+    "python.unitTest.pyTestArgs": [
+        "test"
+    ],
+    "python.unitTest.pyTestEnabled": true
+}
