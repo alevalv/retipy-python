@@ -26,5 +26,5 @@ CONFIG = configuration.Configuration("resources/retipy.config")
 
 for filename in glob.glob(os.path.join(CONFIG.image_directory, '*.png')):
     segmentedImage = retina.Retina(None, filename)
+    segmentedImage.threshold_image()
     windows = retina.create_windows(segmentedImage, CONFIG.window_size)
-    print(windows.count)

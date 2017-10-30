@@ -19,6 +19,7 @@
 from os import path
 
 import cv2
+import numpy as np
 
 class RetinaException(Exception):
     """Basic exception to showcase errors of the retina module"""
@@ -42,6 +43,7 @@ class Retina(object):
             self.image = image
             self._file_name = image_path
         self.segmented = False
+        self.shape = self.image.shape
 
     def threshold_image(self):
         """Applies a thresholding algorithm to the contained image."""
@@ -75,13 +77,21 @@ class Window(Retina):
         return "out_w" + self.window_id + "_" + self._file_name
 
 def create_windows(image, dimension):
-    """Creates multiple square windows of the given dimension for the current retinal image"""
+    """
+    Creates multiple square windows of the given dimension for the current retinal image.
+    Empty windows (i.e. only background) will be ignored
+    """
     size_x = image.shape[0]
     size_y = image.shape[1]
     windows = []
     window_id = 0
-    for x in range(0, dimension, size_x):
-        for y in range(0, dimension, size_y):
-            windows.append(Window(image, window_id, dimension, x, y))
-            window_id += 1
+    for x in range(0, size_x, dimension):
+        for y in range(0, size_y, dimension):
+            current_window = Window(image, window_id, dimension, x, y)
+            pixel_values = current_window.image.sum()
+            if pixel_values > 10:
+                windows.append(current_window)
+                window_id += 1
+
+    print('created ' + str(window_id + 1) + " windows")
     return windows
