@@ -43,11 +43,6 @@ class Retina(object):
             self._file_name = image_path
         self.segmented = False
 
-
-    def create_windows(self, dimension):
-        """Creates multiple square windows of the given dimension for the current retinal image"""
-        pass
-
     def threshold_image(self):
         """Applies a thresholding algorithm to the contained image."""
         _, threshold = cv2.threshold(self.image, 127, 255, cv2.THRESH_BINARY)
@@ -78,3 +73,15 @@ class Window(Retina):
 
     def _output_filename(self):
         return "out_w" + self.window_id + "_" + self._file_name
+
+def create_windows(image, dimension):
+    """Creates multiple square windows of the given dimension for the current retinal image"""
+    size_x = image.shape[0]
+    size_y = image.shape[1]
+    windows = []
+    window_id = 0
+    for x in range(0, dimension, size_x):
+        for y in range(0, dimension, size_y):
+            windows.append(Window(image, window_id, dimension, x, y))
+            window_id += 1
+    return windows
