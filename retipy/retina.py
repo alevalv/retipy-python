@@ -17,9 +17,9 @@
 """retina module to handle basic image processing on retinal images"""
 
 from os import path
+from copy import copy
 
 import cv2
-import numpy as np
 
 class RetinaException(Exception):
     """Basic exception to showcase errors of the retina module"""
@@ -42,13 +42,46 @@ class Retina(object):
         else:
             self.image = image
             self._file_name = image_path
+
         self.segmented = False
-        self.shape = self.image.shape
+        self.size_x = self.image.shape[0]
+        self.size_y = self.image.shape[1]
+        self.old_image = None
+        if len(self.image.shape) == 3:
+            self.depth = self.image.shape[2]
+        else:
+            self.depth = 1
+
+##################################################################################################
+#### Image Processing functions
+##################################################################################################
 
     def threshold_image(self):
         """Applies a thresholding algorithm to the contained image."""
+        self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         _, threshold = cv2.threshold(self.image, 127, 255, cv2.THRESH_BINARY)
         self.image = threshold
+        self.depth = 1
+
+    def detect_edges(self, min_val=0, max_val=1):
+        """
+        Applies canny edge detection to the contained image. Fine tuning of the
+        """
+        self._copy()
+        self.image = cv2.Canny(self.image, min_val, max_val)
+
+##################################################################################################
+#### I/O functions
+##################################################################################################
+
+    def _copy(self):
+        self.old_image = copy(self.image)
+
+    def undo(self):
+        """
+        Reverts the latest modification to the internal image, useful if you are testing different values
+        """
+        self.image = self.old_image
 
     def _output_filename(self):
         return "/out_" + self._file_name
@@ -62,6 +95,7 @@ class Retina(object):
         cv2.imshow(self._file_name, self.image)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
+
 
 class Window(Retina):
     """a ROI (Region of Interest) that extends the Retina class"""
@@ -81,12 +115,10 @@ def create_windows(image, dimension):
     Creates multiple square windows of the given dimension for the current retinal image.
     Empty windows (i.e. only background) will be ignored
     """
-    size_x = image.shape[0]
-    size_y = image.shape[1]
     windows = []
     window_id = 0
-    for x in range(0, size_x, dimension):
-        for y in range(0, size_y, dimension):
+    for x in range(0, image.size_x, dimension):
+        for y in range(0, image.size_y, dimension):
             current_window = Window(image, window_id, dimension, x, y)
             pixel_values = current_window.image.sum()
             if pixel_values > 10:
@@ -95,3 +127,22 @@ def create_windows(image, dimension):
 
     print('created ' + str(window_id + 1) + " windows")
     return windows
+
+def detect_vessel_border(image):
+    """
+    Extracts the vessel border of the given image, this method will try to extract all vessel
+    borders that does not overlap.
+
+    Returns a list of lists with the points of each vessel.
+    """
+    if image.depth != 1:
+        raise RetinaException(
+            "detect vessel border should be done with binary images: " + str(image.depth))
+    dots = []
+    for x in range(0, image.size_x):
+        for y in range(0, image.size_y):
+            if image.image[x, y] > 0:
+                # TODO add algorithm to extract ONE vessel here
+                dots.append([x, y])
+    print("found " + str(len(dots)) + " pixels")
+    return dots

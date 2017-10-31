@@ -28,3 +28,7 @@ for filename in glob.glob(os.path.join(CONFIG.image_directory, '*.png')):
     segmentedImage = retina.Retina(None, filename)
     segmentedImage.threshold_image()
     windows = retina.create_windows(segmentedImage, CONFIG.window_size)
+    #windows[1].view()
+    windows[1].detect_edges()
+    windows[1].view()
+    retina.detect_vessel_border(windows[1])

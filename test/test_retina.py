@@ -31,7 +31,7 @@ class TestRetina(TestCase):
     _image_path = _resources + "/images/" + _image_file_name
 
     def setUp(self):
-        self.image = retina.Retina(self._image_path)
+        self.image = retina.Retina(None, self._image_path)
 
     def tearDown(self):
         if os.path.isfile("./out_" + self._image_file_name):
@@ -39,7 +39,7 @@ class TestRetina(TestCase):
 
     def test_constructor_invalid_path(self):
         """Test the retina constructor when the given path is invalid"""
-        self.assertRaises(retina.RetinaException, retina.Retina, self._resources)
+        self.assertRaises(retina.RetinaException, retina.Retina, None, self._resources)
 
     def test_segmented(self):
         """Test default value for segmented property"""
@@ -51,9 +51,22 @@ class TestRetina(TestCase):
 
     def test_threshold_image(self):
         self.image.threshold_image()
-        _, opencv_output = cv2.threshold(cv2.imread(self._image_path), 127, 255, cv2.THRESH_BINARY)
+        _, opencv_output = cv2.threshold(
+            cv2.cvtColor(
+                cv2.imread(self._image_path), cv2.COLOR_BGR2GRAY), 127, 255, cv2.THRESH_BINARY)
+
         assert_array_equal(self.image.image, opencv_output, "segmented image does not match")
 
     def test_save_image(self):
         self.image.save_image(".")
         self.assertTrue(os.path.isfile("./out_" + self._image_file_name))
+
+    def test_undo(self):
+        self.image.detect_edges()
+        original_image = retina.Retina(None, self._image_path)
+        self.assertRaises(
+            AssertionError,
+            assert_array_equal,
+            self.image.image, original_image.image, "images should be different")
+        self.image.undo()
+        assert_array_equal(self.image.image, original_image.image, "image should be the same")
