@@ -21,11 +21,13 @@ from copy import copy
 
 import cv2
 
+
 class RetinaException(Exception):
     """Basic exception to showcase errors of the retina module"""
     def __init__(self, message):
         super(RetinaException, self).__init__(message)
         self.message = message
+
 
 class Retina(object):
     """
@@ -53,8 +55,7 @@ class Retina(object):
             self.depth = 1
 
 ##################################################################################################
-#### Image Processing functions
-##################################################################################################
+# Image Processing functions
 
     def threshold_image(self):
         """Applies a thresholding algorithm to the contained image."""
@@ -71,8 +72,7 @@ class Retina(object):
         self.image = cv2.Canny(self.image, min_val, max_val)
 
 ##################################################################################################
-#### I/O functions
-##################################################################################################
+# I/O functions
 
     def _copy(self):
         self.old_image = copy(self.image)
@@ -102,13 +102,14 @@ class Window(Retina):
     def __init__(self, image, window_id, dimension, start_x, start_y):
         super(Window, self).__init__(
             image.image[start_x:(start_x + dimension), start_y:(start_y + dimension)],
-            image._file_name) #pylint: disable=W0212
+            image._file_name)  # pylint: disable=W0212
         self.window_id = window_id
         self._x = start_x
         self._y = start_y
 
     def _output_filename(self):
         return "out_w" + self.window_id + "_" + self._file_name
+
 
 def create_windows(image, dimension):
     """
@@ -128,6 +129,7 @@ def create_windows(image, dimension):
     print('created ' + str(window_id + 1) + " windows")
     return windows
 
+
 def detect_vessel_border(image):
     """
     Extracts the vessel border of the given image, this method will try to extract all vessel
@@ -135,14 +137,57 @@ def detect_vessel_border(image):
 
     Returns a list of lists with the points of each vessel.
     """
+
+    def vessel_extractor(image, start_x, start_y):
+        """
+        Extracts a vessel using adjacent points, when each point is extracted is deleted from the
+        original image
+        """
+        vessel = []
+        pending_pixels = [[start_x, start_y]]
+        while pending_pixels:
+            pixel = pending_pixels.pop(0)
+            if image.image[pixel[0], pixel[1]] > 0:
+                vessel.append(pixel)
+                image.image[pixel[0], pixel[1]] = 0
+
+                #test all 8 neighbours
+                x_less = max(0, pixel[0] -1)
+                y_less = max(0, pixel[1] - 1)
+                x_more = min(image.size_x - 1, pixel[0] + 1)
+                y_more = min(image.size_y - 1, pixel[1] + 1)
+
+                if image.image[x_less, y_less] > 0:
+                    pending_pixels.append([x_less, y_less])
+                if image.image[x_less, pixel[1]] > 0:
+                    pending_pixels.append([x_less, pixel[1]])
+                if image.image[x_less, y_more] > 0:
+                    pending_pixels.append([x_less, y_more])
+                if image.image[pixel[0], y_less] > 0:
+                    pending_pixels.append([pixel[0], y_less])
+                if image.image[pixel[0], y_more] > 0:
+                    pending_pixels.append([pixel[0], y_more])
+                if image.image[x_more, y_less] > 0:
+                    pending_pixels.append([x_more, y_less])
+                if image.image[x_more, pixel[1]] > 0:
+                    pending_pixels.append([x_more, pixel[1]])
+                if image.image[x_more, y_more] > 0:
+                    pending_pixels.append([x_more, y_more])
+
+        #sort by x position
+        vessel.sort(key=lambda item: item[0])
+
+        return vessel
+
     if image.depth != 1:
         raise RetinaException(
             "detect vessel border should be done with binary images: " + str(image.depth))
-    dots = []
-    for x in range(0, image.size_x):
-        for y in range(0, image.size_y):
-            if image.image[x, y] > 0:
-                # TODO add algorithm to extract ONE vessel here
-                dots.append([x, y])
-    print("found " + str(len(dots)) + " pixels")
-    return dots
+    vessels = []
+    for it_x in range(0, image.size_x):
+        for it_y in range(0, image.size_y):
+            if image.image[it_x, it_y] > 0:
+                vessel = vessel_extractor(image, it_x, it_y)
+                vessels.append(vessel)
+    if vessels:
+        print("found " + str(len(vessels)) + " vessels")
+    return vessels

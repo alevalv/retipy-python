@@ -23,6 +23,7 @@ import cv2
 from numpy.testing import assert_array_equal
 from retipy import retina
 
+
 class TestRetina(TestCase):
     """Test class for Retina class"""
 
