@@ -20,7 +20,7 @@
 import os
 import glob
 
-from retipy import configuration, retina
+from retipy import configuration, retina, tortuosity
 
 CONFIG = configuration.Configuration("resources/retipy.config")
 
@@ -33,5 +33,6 @@ for filename in glob.glob(os.path.join(CONFIG.image_directory, '*.png')):
         window.detect_edges()
         vessels = retina.detect_vessel_border(window)
         if vessels:
-            print(vessels)
-    segmentedImage.view()
+            for vessel in vessels:
+                # TODO apply tortuosity measure
+                pass

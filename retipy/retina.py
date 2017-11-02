@@ -21,7 +21,6 @@ from copy import copy
 
 import cv2
 
-
 class RetinaException(Exception):
     """Basic exception to showcase errors of the retina module"""
     def __init__(self, message):
@@ -111,20 +110,35 @@ class Window(Retina):
         return "out_w" + self.window_id + "_" + self._file_name
 
 
-def create_windows(image, dimension):
+def create_windows(image, dimension, method="separated", min_pixels=10):
     """
     Creates multiple square windows of the given dimension for the current retinal image.
     Empty windows (i.e. only background) will be ignored
+
+    Separated method will create windows of the given dimension size, that does not share any
+    pixel, combined will make windows advancing half of the dimension, sharing some pixels
+    between adjacent windows.
     """
     windows = []
     window_id = 0
-    for x in range(0, image.size_x, dimension):
-        for y in range(0, image.size_y, dimension):
-            current_window = Window(image, window_id, dimension, x, y)
-            pixel_values = current_window.image.sum()
-            if pixel_values > 10:
-                windows.append(current_window)
-                window_id += 1
+
+    if method == "separated":
+        for x in range(0, image.size_x, dimension):
+            for y in range(0, image.size_y, dimension):
+                current_window = Window(image, window_id, dimension, x, y)
+                pixel_values = current_window.image.sum()
+                if pixel_values > min_pixels:
+                    windows.append(current_window)
+                    window_id += 1
+    elif method == "combined":
+        new_dimension = round(dimension/2)
+        for x in range(0, image.size_x, new_dimension):
+            for y in range(0, image.size_y, new_dimension):
+                current_window = Window(image, window_id, dimension, x, y)
+                pixel_values = current_window.image.sum()
+                if pixel_values > min_pixels:
+                    windows.append(current_window)
+                    window_id += 1
 
     print('created ' + str(window_id + 1) + " windows")
     return windows

@@ -1,9 +1,11 @@
 {
     "cSpell.words": [
+        "exception",
         "imread",
         "imshow",
         "imwrite",
-        "isfile"
+        "isfile",
+        "tortuosity"
     ],
     "python.unitTest.pyTestArgs": [
         "test"
