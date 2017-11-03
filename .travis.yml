@@ -1,6 +1,6 @@
 language: python
 python: "3.6"
 
-install: pip install -r opencv-python
+install: pip install numpy opencv-python
 
 script: pytest
