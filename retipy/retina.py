@@ -82,6 +82,9 @@ class Retina(object):
         """
         self.image = self.old_image
 
+    def filename(self):
+        return self._file_name
+
     def _output_filename(self):
         return "/out_" + self._file_name
 
@@ -101,7 +104,7 @@ class Window(Retina):
     def __init__(self, image, window_id, dimension, start_x, start_y):
         super(Window, self).__init__(
             image.image[start_x:(start_x + dimension), start_y:(start_y + dimension)],
-            image._file_name)  # pylint: disable=W0212
+            image.filename())
         self.window_id = window_id
         self._x = start_x
         self._y = start_y
@@ -132,15 +135,15 @@ def create_windows(image, dimension, method="separated", min_pixels=10):
                     window_id += 1
     elif method == "combined":
         new_dimension = round(dimension/2)
-        for x in range(0, image.size_x, new_dimension):
-            for y in range(0, image.size_y, new_dimension):
+        for x in range(0, image.size_x - new_dimension, new_dimension):
+            for y in range(0, image.size_y - new_dimension, new_dimension):
                 current_window = Window(image, window_id, dimension, x, y)
                 pixel_values = current_window.image.sum()
                 if pixel_values > min_pixels:
                     windows.append(current_window)
                     window_id += 1
 
-    print('created ' + str(window_id + 1) + " windows")
+    print('created ' + str(window_id) + " windows")
     return windows
 
 
@@ -152,7 +155,7 @@ def detect_vessel_border(image):
     Returns a list of lists with the points of each vessel.
     """
 
-    def vessel_extractor(image, start_x, start_y):
+    def vessel_extractor(window, start_x, start_y):
         """
         Extracts a vessel using adjacent points, when each point is extracted is deleted from the
         original image
@@ -161,34 +164,34 @@ def detect_vessel_border(image):
         pending_pixels = [[start_x, start_y]]
         while pending_pixels:
             pixel = pending_pixels.pop(0)
-            if image.image[pixel[0], pixel[1]] > 0:
+            if window.image[pixel[0], pixel[1]] > 0:
                 vessel.append(pixel)
-                image.image[pixel[0], pixel[1]] = 0
+                window.image[pixel[0], pixel[1]] = 0
 
-                #test all 8 neighbours
-                x_less = max(0, pixel[0] -1)
+                # test all 8 neighbours
+                x_less = max(0, pixel[0] - 1)
                 y_less = max(0, pixel[1] - 1)
-                x_more = min(image.size_x - 1, pixel[0] + 1)
-                y_more = min(image.size_y - 1, pixel[1] + 1)
+                x_more = min(window.size_x - 1, pixel[0] + 1)
+                y_more = min(window.size_y - 1, pixel[1] + 1)
 
-                if image.image[x_less, y_less] > 0:
+                if window.image[x_less, y_less] > 0:
                     pending_pixels.append([x_less, y_less])
-                if image.image[x_less, pixel[1]] > 0:
+                if window.image[x_less, pixel[1]] > 0:
                     pending_pixels.append([x_less, pixel[1]])
-                if image.image[x_less, y_more] > 0:
+                if window.image[x_less, y_more] > 0:
                     pending_pixels.append([x_less, y_more])
-                if image.image[pixel[0], y_less] > 0:
+                if window.image[pixel[0], y_less] > 0:
                     pending_pixels.append([pixel[0], y_less])
-                if image.image[pixel[0], y_more] > 0:
+                if window.image[pixel[0], y_more] > 0:
                     pending_pixels.append([pixel[0], y_more])
-                if image.image[x_more, y_less] > 0:
+                if window.image[x_more, y_less] > 0:
                     pending_pixels.append([x_more, y_less])
-                if image.image[x_more, pixel[1]] > 0:
+                if window.image[x_more, pixel[1]] > 0:
                     pending_pixels.append([x_more, pixel[1]])
-                if image.image[x_more, y_more] > 0:
+                if window.image[x_more, y_more] > 0:
                     pending_pixels.append([x_more, y_more])
 
-        #sort by x position
+        # sort by x position
         vessel.sort(key=lambda item: item[0])
 
         return vessel

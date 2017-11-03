@@ -54,11 +54,19 @@ class TestConfiguration(TestCase):
         self.assertEqual(config.image_directory, self._image_directory, "wrong image directory")
         self.assertEqual(config.window_size, self._window_size)
 
+    def test_constructor_no_default_cat(self):
+        """test the constructor when there is no General category"""
+        test_configuration = configparser.ConfigParser()
+        with open(self._config_file, 'w') as configfile:
+            test_configuration.write(configfile)
+        self.assertRaises(
+            configuration.ConfigurationException, configuration.Configuration, self._config_file)
+
     def test_constructor_error_img_dir(self):
         """test the constructor when the image directory is not defined"""
         test_configuration = configparser.ConfigParser()
         test_configuration['General'] = {
-            configuration._PROPERTY_WINDOW_SIZE : str(self._window_size) #pylint: disable=W0212
+            configuration._PROPERTY_WINDOW_SIZE : str(self._window_size)
         }
         with open(self._config_file, 'w') as configfile:
             test_configuration.write(configfile)
@@ -70,6 +78,47 @@ class TestConfiguration(TestCase):
         test_configuration = configparser.ConfigParser()
         test_configuration['General'] = {
             configuration._PROPERTY_IMAGE_DIRECTORY: self._image_directory #pylint: disable=W0212
+        }
+        with open(self._config_file, 'w') as configfile:
+            test_configuration.write(configfile)
+        self.assertRaises(
+            configuration.ConfigurationException, configuration.Configuration, self._config_file)
+
+    def test_constructor_error_pixels(self):
+        """test the constructor when the pixels per window property is not configured"""
+
+        test_configuration = configparser.ConfigParser()
+        test_configuration[configuration._PROPERTY_DEFAULT_CATEGORY] = {
+            configuration._PROPERTY_IMAGE_DIRECTORY: self._image_directory,
+            configuration._PROPERTY_WINDOW_SIZE: str(self._window_size),
+            configuration._PROPERTY_SAMPLING_SIZE: str(self._sampling_size),
+            configuration._PROPERTY_R2_THRESHOLD: str(self._r2_threshold)
+        }
+        with open(self._config_file, 'w') as configfile:
+            test_configuration.write(configfile)
+        self.assertRaises(
+            configuration.ConfigurationException, configuration.Configuration, self._config_file)
+
+    def test_constructor_error_sampling_size(self):
+        test_configuration = configparser.ConfigParser()
+        test_configuration[configuration._PROPERTY_DEFAULT_CATEGORY] = {
+            configuration._PROPERTY_IMAGE_DIRECTORY: self._image_directory,
+            configuration._PROPERTY_WINDOW_SIZE: str(self._window_size),
+            configuration._PROPERTY_PIXELS_PER_WINDOW: str(self._pixels_per_window),
+            configuration._PROPERTY_R2_THRESHOLD: str(self._r2_threshold)
+        }
+        with open(self._config_file, 'w') as configfile:
+            test_configuration.write(configfile)
+        self.assertRaises(
+            configuration.ConfigurationException, configuration.Configuration, self._config_file)
+
+    def test_constructor_error_r2_threshold(self):
+        test_configuration = configparser.ConfigParser()
+        test_configuration[configuration._PROPERTY_DEFAULT_CATEGORY] = {
+            configuration._PROPERTY_IMAGE_DIRECTORY: self._image_directory,
+            configuration._PROPERTY_WINDOW_SIZE: str(self._window_size),
+            configuration._PROPERTY_PIXELS_PER_WINDOW: str(self._pixels_per_window),
+            configuration._PROPERTY_SAMPLING_SIZE: str(self._sampling_size)
         }
         with open(self._config_file, 'w') as configfile:
             test_configuration.write(configfile)
