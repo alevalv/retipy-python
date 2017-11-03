@@ -5,6 +5,7 @@ install:
 # build dependencies
   - pip install numpy opencv-python
 # test dependencies
+  - pip install coveralls
   - pip install pytest pytest-cov
 
 script:
