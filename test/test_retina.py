@@ -88,7 +88,7 @@ class TestWindow(TestCase):
 
     def setUp(self):
         self._retina_image = retina.Retina(
-            np.zeros((self._image_size, self._image_size), np.uint8), "window_test")
+            np.zeros((self._image_size, self._image_size), np.uint8), _image_file_name)
 
     def test_constructor(self):
         """test the Window constructor in a positive scenario"""
@@ -100,7 +100,7 @@ class TestWindow(TestCase):
         self.assertTrue(not windows, "windows should be empty")
 
         # test with a full data image
-        self._retina_image.image[:,:] = 1
+        self._retina_image.image[:, :] = 1
         windows = retina.create_windows(self._retina_image, 8)
         self.assertEqual(len(windows), self._image_size, "expected 64 windows")
 
@@ -121,7 +121,24 @@ class TestWindow(TestCase):
 
     def test_vessel_extractor(self):
         self._retina_image.image[10, 10:20] = 1
+        self._retina_image.image[11, 20] = 1
+        self._retina_image.image[9, 20] = 1
+        self._retina_image.image[11, 21] = 1
+        self._retina_image.image[9, 21] = 1
         vessels = retina.detect_vessel_border(self._retina_image)
 
         self.assertEqual(len(vessels), 1, "only one vessel should've been extracted")
-        self.assertEqual(len(vessels[0]), 10, "vessel should have 10 pixels")
+        self.assertEqual(len(vessels[0]), 14, "vessel should have 10 pixels")
+
+    def test_vessel_extractor_error_depth(self):
+        rgb_image = retina.Retina(
+            np.zeros((self._image_size, self._image_size, 3), np.uint8), "rgb")
+        self.assertRaises(retina.RetinaException, retina.detect_vessel_border, rgb_image)
+
+    def test_output_filename(self):
+        window = retina.Window(self._retina_image, 0, 8, 0, 0)
+        window.image[:, :] = 1
+        window.save_image("./")
+        self.assertTrue(os.path.isfile(window._output_filename()), "file not found")
+        os.unlink(window._output_filename())
+

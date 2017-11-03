@@ -16,14 +16,17 @@
 
 """Module with operations related to extracting tortuosity measures."""
 
+
 class TortuosityException(Exception):
     """Basic exception to showcase errors of the tortuosity module"""
     def __init__(self, message):
         super(TortuosityException, self).__init__(message)
         self.message = message
 
+
 SAMPLING_SIZE = 6
 R2_THRESHOLD = 0.98
+
 
 def linear_regression_tortuosity(curve):
     """
@@ -34,7 +37,7 @@ def linear_regression_tortuosity(curve):
 
     This method assumes that the given parameter is a sorted list.
 
-    Returns true if the curve has a determination coefficient that's over the threshold
+    Returns true if the curve has a determination coefficient that's lower than the threshold
     """
     if len(curve) < 3:
         raise TortuosityException("Given curve must have more than 3 elements")
@@ -48,10 +51,11 @@ def linear_regression_tortuosity(curve):
 
     sample_distance = round(len(curve) / SAMPLING_SIZE)
 
-    #linear regression function
-    f_y = lambda x: x * slope + y_intercept
+    # linear regression function
+    def f_y(x):
+        return x * slope + y_intercept
 
-    #calculate y_average
+    # calculate y_average
     y_average = 0
     item_count = 0
     for i in range(1, len(curve) - 1, sample_distance):
@@ -59,7 +63,7 @@ def linear_regression_tortuosity(curve):
         item_count += 1
     y_average /= item_count
 
-    #calculate determination coefficient
+    # calculate determination coefficient
     top_sum = 0
     bottom_sum = 0
     for i in range(1, len(curve) - 1, sample_distance):
@@ -68,4 +72,4 @@ def linear_regression_tortuosity(curve):
 
     r_2 = top_sum / bottom_sum
 
-    return r_2 > R2_THRESHOLD
+    return r_2 < R2_THRESHOLD

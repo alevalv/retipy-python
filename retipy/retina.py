@@ -92,7 +92,7 @@ class Retina(object):
         """Saves the image in the given output folder, the name will be out_<original_image_name>"""
         cv2.imwrite(output_folder + self._output_filename(), self.image)
 
-    def view(self):
+    def view(self): # pragma: no cover
         "show a window with the internal image"
         cv2.imshow(self._file_name, self.image)
         cv2.waitKey(0)
@@ -110,7 +110,7 @@ class Window(Retina):
         self._y = start_y
 
     def _output_filename(self):
-        return "out_w" + self.window_id + "_" + self._file_name
+        return "out_w" + str(self.window_id) + "_" + self._file_name
 
 
 def create_windows(image, dimension, method="separated", min_pixels=10):

@@ -45,13 +45,13 @@ class Configuration(object):
     sampling_size = 0
     r_2_threshold = 0
 
-    def __init__(self, filePath):
-        if filePath:
+    def __init__(self, file_path):
+        if file_path:
             config = configparser.ConfigParser()
-            config.read(filePath)
+            config.read(file_path)
             if _PROPERTY_DEFAULT_CATEGORY not in config:
                 raise ConfigurationException(
-                    _PROPERTY_DEFAULT_CATEGORY + "configuration not found in " + filePath)
+                    _PROPERTY_DEFAULT_CATEGORY + "configuration not found in " + file_path)
 
             if config.has_option(_PROPERTY_DEFAULT_CATEGORY, _PROPERTY_IMAGE_DIRECTORY):
                 self.image_directory = config[_PROPERTY_DEFAULT_CATEGORY][_PROPERTY_IMAGE_DIRECTORY]
