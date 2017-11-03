@@ -25,11 +25,13 @@ _PROPERTY_PIXELS_PER_WINDOW = 'PixelsPerWindow'
 _PROPERTY_SAMPLING_SIZE = "SamplingSize"
 _PROPERTY_R2_THRESHOLD = "R2Threshold"
 
+
 class ConfigurationException(Exception):
     """Basic exception to showcase errors of the configuration module"""
     def __init__(self, message):
         super(ConfigurationException, self).__init__(message)
         self.message = message
+
 
 class Configuration(object):
     """
@@ -42,7 +44,6 @@ class Configuration(object):
     pixels_per_window = 0
     sampling_size = 0
     r_2_threshold = 0
-
 
     def __init__(self, filePath):
         if filePath:
@@ -71,14 +72,14 @@ class Configuration(object):
 
             if config.has_option(_PROPERTY_DEFAULT_CATEGORY, _PROPERTY_SAMPLING_SIZE):
                 self.sampling_size = int(
-                    config[_PROPERTY_DEFAULT_CATEGORY, _PROPERTY_SAMPLING_SIZE])
+                    config[_PROPERTY_DEFAULT_CATEGORY][_PROPERTY_SAMPLING_SIZE])
             if not self.sampling_size:
                 raise ConfigurationException(
                     _PROPERTY_SAMPLING_SIZE + "is not configured or is zero")
 
             if config.has_option(_PROPERTY_DEFAULT_CATEGORY, _PROPERTY_R2_THRESHOLD):
                 self.r_2_threshold = float(
-                    config[_PROPERTY_DEFAULT_CATEGORY, _PROPERTY_R2_THRESHOLD])
+                    config[_PROPERTY_DEFAULT_CATEGORY][_PROPERTY_R2_THRESHOLD])
             if not self.r_2_threshold:
                 raise ConfigurationException(
                     _PROPERTY_R2_THRESHOLD + "is not configured or is zero")

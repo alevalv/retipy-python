@@ -18,22 +18,29 @@
 
 import configparser
 import os
-
 from unittest import TestCase
+
 from retipy import configuration
+
 
 class TestConfiguration(TestCase):
     """Test class for Configuration class of configuration module"""
 
     _image_directory = 'some/directory'
     _window_size = 2
+    _pixels_per_window = 4
+    _sampling_size = 6
+    _r2_threshold = 0.94
     _config_file = 'test.config'
 
     def setUp(self):
         test_configuration = configparser.ConfigParser()
-        test_configuration['General'] = {
-            configuration._PROPERTY_IMAGE_DIRECTORY : self._image_directory, #pylint: disable=W0212
-            configuration._PROPERTY_WINDOW_SIZE : str(self._window_size) #pylint: disable=W0212
+        test_configuration[configuration._PROPERTY_DEFAULT_CATEGORY] = {
+            configuration._PROPERTY_IMAGE_DIRECTORY: self._image_directory,
+            configuration._PROPERTY_WINDOW_SIZE: str(self._window_size),
+            configuration._PROPERTY_PIXELS_PER_WINDOW: str(self._pixels_per_window),
+            configuration._PROPERTY_SAMPLING_SIZE: str(self._sampling_size),
+            configuration._PROPERTY_R2_THRESHOLD: str(self._r2_threshold)
         }
         with open(self._config_file, 'w') as configfile:
             test_configuration.write(configfile)

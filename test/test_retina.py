@@ -21,6 +21,7 @@ from unittest import TestCase
 
 import cv2
 from numpy.testing import assert_array_equal
+
 from retipy import retina
 
 
