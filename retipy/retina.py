@@ -22,6 +22,7 @@ from copy import copy
 import cv2
 from lib import thinning
 
+
 class RetinaException(Exception):
     """Basic exception to showcase errors of the retina module"""
     def __init__(self, message):
@@ -171,6 +172,34 @@ def detect_vessel_border(image):
     Returns a list of lists with the points of each vessel.
     """
 
+    def neighbours(pixel, window):  # pragma: no cover
+
+        x_less = max(0, pixel[0] - 1)
+        y_less = max(0, pixel[1] - 1)
+        x_more = min(window.size_x - 1, pixel[0] + 1)
+        y_more = min(window.size_y - 1, pixel[1] + 1)
+
+        active_neighbours = []
+
+        if window.image[x_less, y_less] > 0:
+            active_neighbours.append([x_less, y_less])
+        if window.image[x_less, pixel[1]] > 0:
+            active_neighbours.append([x_less, pixel[1]])
+        if window.image[x_less, y_more] > 0:
+            active_neighbours.append([x_less, y_more])
+        if window.image[pixel[0], y_less] > 0:
+            active_neighbours.append([pixel[0], y_less])
+        if window.image[pixel[0], y_more] > 0:
+            active_neighbours.append([pixel[0], y_more])
+        if window.image[x_more, y_less] > 0:
+            active_neighbours.append([x_more, y_less])
+        if window.image[x_more, pixel[1]] > 0:
+            active_neighbours.append([x_more, pixel[1]])
+        if window.image[x_more, y_more] > 0:
+            active_neighbours.append([x_more, y_more])
+
+        return active_neighbours
+
     def vessel_extractor(window, start_x, start_y):
         """
         Extracts a vessel using adjacent points, when each point is extracted is deleted from the
@@ -184,28 +213,8 @@ def detect_vessel_border(image):
                 vessel.append(pixel)
                 window.image[pixel[0], pixel[1]] = 0
 
-                # test all 8 neighbours
-                x_less = max(0, pixel[0] - 1)
-                y_less = max(0, pixel[1] - 1)
-                x_more = min(window.size_x - 1, pixel[0] + 1)
-                y_more = min(window.size_y - 1, pixel[1] + 1)
-
-                if window.image[x_less, y_less] > 0:
-                    pending_pixels.append([x_less, y_less])
-                if window.image[x_less, pixel[1]] > 0:
-                    pending_pixels.append([x_less, pixel[1]])
-                if window.image[x_less, y_more] > 0:
-                    pending_pixels.append([x_less, y_more])
-                if window.image[pixel[0], y_less] > 0:
-                    pending_pixels.append([pixel[0], y_less])
-                if window.image[pixel[0], y_more] > 0:
-                    pending_pixels.append([pixel[0], y_more])
-                if window.image[x_more, y_less] > 0:
-                    pending_pixels.append([x_more, y_less])
-                if window.image[x_more, pixel[1]] > 0:
-                    pending_pixels.append([x_more, pixel[1]])
-                if window.image[x_more, y_more] > 0:
-                    pending_pixels.append([x_more, y_more])
+                # add the neighbours with value to pending list:
+                pending_pixels.extend(neighbours(pixel, window))
 
         # sort by x position
         vessel.sort(key=lambda item: item[0])

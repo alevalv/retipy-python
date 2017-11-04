@@ -68,6 +68,14 @@ class TestRetina(TestCase):
 
         assert_array_equal(self.image.image, opencv_output, "segmented image does not match")
 
+    def test_apply_thinning(self):
+        retina_image = retina.Retina(np.zeros((64, 64), np.uint8), _image_file_name)
+        retina_image.image[10:17, 10:13] = 1
+        retina_image.apply_thinning()
+        output = [0, 1, 1, 1, 1, 0]
+        assert_array_equal(retina_image.image[10:16, 11], output, "expected a line")
+
+
     def test_save_image(self):
         self.image.save_image(".")
         self.assertTrue(os.path.isfile("./out_" + _image_file_name))
