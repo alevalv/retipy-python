@@ -34,3 +34,8 @@ class TestTortuosity(TestCase):
             tortuosity.TortuosityException,
             tortuosity.linear_regression_tortuosity,
             [[1, 1]])
+
+    def test_linear_regression_tortuosity_no_interpolation(self):
+        self.assertFalse(
+            tortuosity.linear_regression_tortuosity([[1, 1], [2, 1], [3, 1], [4, 1]]),
+            "a not applicable line should return false")
