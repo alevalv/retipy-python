@@ -22,7 +22,7 @@ from retipy import tortuosity
 
 
 class TestTortuosity(TestCase):
-    _straight_line = [[1,1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6], [7, 7]]
+    _straight_line = [[1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6], [7, 7]]
 
     def test_linear_regression_tortuosity(self):
         self.assertFalse(

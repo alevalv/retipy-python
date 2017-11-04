@@ -66,7 +66,7 @@ class TestConfiguration(TestCase):
         """test the constructor when the image directory is not defined"""
         test_configuration = configparser.ConfigParser()
         test_configuration['General'] = {
-            configuration._PROPERTY_WINDOW_SIZE : str(self._window_size)
+            configuration._PROPERTY_WINDOW_SIZE: str(self._window_size)
         }
         with open(self._config_file, 'w') as configfile:
             test_configuration.write(configfile)
@@ -77,7 +77,7 @@ class TestConfiguration(TestCase):
         """test the constructor when the window property is not defined"""
         test_configuration = configparser.ConfigParser()
         test_configuration['General'] = {
-            configuration._PROPERTY_IMAGE_DIRECTORY: self._image_directory #pylint: disable=W0212
+            configuration._PROPERTY_IMAGE_DIRECTORY: self._image_directory
         }
         with open(self._config_file, 'w') as configfile:
             test_configuration.write(configfile)

@@ -39,37 +39,39 @@ def linear_regression_tortuosity(curve):
 
     Returns true if the curve has a determination coefficient that's lower than the threshold
     """
-    if len(curve) < 3:
-        raise TortuosityException("Given curve must have more than 3 elements")
+    if len(curve) < 4:
+        raise TortuosityException("Given curve must have more than 4 elements")
 
-    min_point = curve[0]
-    max_point = curve[len(curve) - 1]
+    try:
+        min_point = curve[0]
+        max_point = curve[len(curve) - 1]
 
-    slope = (max_point[1] - min_point[1])/(max_point[0] - min_point[0])
+        slope = (max_point[1] - min_point[1])/(max_point[0] - min_point[0])
 
-    y_intercept = min_point[1] - slope*min_point[0]
+        y_intercept = min_point[1] - slope*min_point[0]
 
-    sample_distance = round(len(curve) / SAMPLING_SIZE)
+        sample_distance = round(len(curve) / SAMPLING_SIZE)
 
-    # linear regression function
-    def f_y(x):
-        return x * slope + y_intercept
+        # linear regression function
+        def f_y(x):
+            return x * slope + y_intercept
 
-    # calculate y_average
-    y_average = 0
-    item_count = 0
-    for i in range(1, len(curve) - 1, sample_distance):
-        y_average += curve[i][1]
-        item_count += 1
-    y_average /= item_count
+        # calculate y_average
+        y_average = 0
+        item_count = 0
+        for i in range(1, len(curve) - 1, sample_distance):
+            y_average += curve[i][1]
+            item_count += 1
+        y_average /= item_count
 
-    # calculate determination coefficient
-    top_sum = 0
-    bottom_sum = 0
-    for i in range(1, len(curve) - 1, sample_distance):
-        top_sum += (f_y(curve[i][0]) - y_average)**2
-        bottom_sum += (curve[i][1] - y_average)**2
+        # calculate determination coefficient
+        top_sum = 0
+        bottom_sum = 0
+        for i in range(1, len(curve) - 1, sample_distance):
+            top_sum += (f_y(curve[i][0]) - y_average)**2
+            bottom_sum += (curve[i][1] - y_average)**2
 
-    r_2 = top_sum / bottom_sum
-
+        r_2 = top_sum / bottom_sum
+    except ZeroDivisionError:  # mark not applicable vessels as not tortuous?
+        r_2 = 1
     return r_2 < R2_THRESHOLD

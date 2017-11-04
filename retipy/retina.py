@@ -20,6 +20,7 @@ from os import path
 from copy import copy
 
 import cv2
+from lib import thinning
 
 class RetinaException(Exception):
     """Basic exception to showcase errors of the retina module"""
@@ -60,15 +61,21 @@ class Retina(object):
         """Applies a thresholding algorithm to the contained image."""
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         _, threshold = cv2.threshold(self.image, 127, 255, cv2.THRESH_BINARY)
+        threshold[threshold > 0] = 1
         self.image = threshold
         self.depth = 1
 
-    def detect_edges(self, min_val=0, max_val=1):
+    def detect_edges_canny(self, min_val=0, max_val=1):
         """
         Applies canny edge detection to the contained image. Fine tuning of the
         """
         self._copy()
         self.image = cv2.Canny(self.image, min_val, max_val)
+
+    def apply_thinning(self):
+        """Applies a thinning algorithm on the stored image"""
+        self._copy()
+        self.image = thinning.thinning_zhang_suen(self.image)
 
 ##################################################################################################
 # I/O functions
@@ -92,8 +99,8 @@ class Retina(object):
         """Saves the image in the given output folder, the name will be out_<original_image_name>"""
         cv2.imwrite(output_folder + self._output_filename(), self.image)
 
-    def view(self): # pragma: no cover
-        "show a window with the internal image"
+    def view(self):  # pragma: no cover
+        """show a window with the internal image"""
         cv2.imshow(self._file_name, self.image)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
@@ -111,6 +118,15 @@ class Window(Retina):
 
     def _output_filename(self):
         return "out_w" + str(self.window_id) + "_" + self._file_name
+
+    def view(self):  # pragma: no cover
+        """show a window with the internal image"""
+        self._copy()
+        cv2.normalize(self.image, self.image, 255, 0, cv2.NORM_MINMAX)
+        cv2.imshow(self._file_name, self.image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        self.undo()
 
 
 def create_windows(image, dimension, method="separated", min_pixels=10):

@@ -64,6 +64,7 @@ class TestRetina(TestCase):
         _, opencv_output = cv2.threshold(
             cv2.cvtColor(
                 cv2.imread(_image_path), cv2.COLOR_BGR2GRAY), 127, 255, cv2.THRESH_BINARY)
+        opencv_output[opencv_output > 0] = 1
 
         assert_array_equal(self.image.image, opencv_output, "segmented image does not match")
 
@@ -72,7 +73,7 @@ class TestRetina(TestCase):
         self.assertTrue(os.path.isfile("./out_" + _image_file_name))
 
     def test_undo(self):
-        self.image.detect_edges()
+        self.image.detect_edges_canny()
         original_image = retina.Retina(None, _image_path)
         self.assertRaises(
             AssertionError,
@@ -141,4 +142,3 @@ class TestWindow(TestCase):
         window.save_image("./")
         self.assertTrue(os.path.isfile(window._output_filename()), "file not found")
         os.unlink(window._output_filename())
-
