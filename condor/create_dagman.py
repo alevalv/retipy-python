@@ -20,7 +20,7 @@
 
 import numpy as np
 
-TEMPLATE_JOB = 'JOB {} scirdr.condor\n'
+TEMPLATE_JOB = 'JOB {} retipy.condor\n'
 TEMPLATE_VARIABLES = '''VARS {0} w="{1}"
 VARS {0} ppw="{2}"
 VARS {0} ss="{3}"
