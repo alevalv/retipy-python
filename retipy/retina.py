@@ -18,8 +18,10 @@
 
 from os import path
 from copy import copy
+import warnings
 
-import cv2
+from skimage import color, feature, filters, io
+from matplotlib import pyplot as plt
 from lib import thinning
 
 
@@ -37,7 +39,7 @@ class Retina(object):
     """
     def __init__(self, image, image_path):
         if image is None:
-            self.image = cv2.imread(image_path)
+            self.image = io.imread(image_path)
             if self.image is None:
                 raise RetinaException("The given path is incorrect: " + image_path)
             _, file = path.split(image_path)
@@ -50,20 +52,16 @@ class Retina(object):
         self.size_x = self.image.shape[0]
         self.size_y = self.image.shape[1]
         self.old_image = None
-        if len(self.image.shape) == 3:
-            self.depth = self.image.shape[2]
-        else:
-            self.depth = 1
+        self.image = color.rgb2gray(self.image)
+        self.depth = 1
 
 ##################################################################################################
 # Image Processing functions
 
     def threshold_image(self):
         """Applies a thresholding algorithm to the contained image."""
-        self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
-        _, threshold = cv2.threshold(self.image, 127, 255, cv2.THRESH_BINARY)
-        threshold[threshold > 0] = 1
-        self.image = threshold
+        threshold = filters.threshold_mean(self.image)
+        self.image = self.image > threshold
         self.depth = 1
 
     def detect_edges_canny(self, min_val=0, max_val=1):
@@ -71,7 +69,7 @@ class Retina(object):
         Applies canny edge detection to the contained image. Fine tuning of the
         """
         self._copy()
-        self.image = cv2.Canny(self.image, min_val, max_val)
+        self.image = feature.canny(self.image, low_threshold=min_val, high_threshold=max_val)
 
     def apply_thinning(self):
         """Applies a thinning algorithm on the stored image"""
@@ -99,13 +97,14 @@ class Retina(object):
 
     def save_image(self, output_folder):
         """Saves the image in the given output folder, the name will be out_<original_image_name>"""
-        cv2.imwrite(output_folder + self._output_filename(), self.image)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            io.imsave(output_folder + self._output_filename(), self.image)
 
     def view(self):  # pragma: no cover
         """show a window with the internal image"""
-        cv2.imshow(self._file_name, self.image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        io.imshow(self.image)
+        plt.show()
 
 
 class Window(Retina):
@@ -120,15 +119,6 @@ class Window(Retina):
 
     def _output_filename(self):
         return "out_w" + str(self.window_id) + "_" + self._file_name
-
-    def view(self):  # pragma: no cover
-        """show a window with the internal image"""
-        self._copy()
-        cv2.normalize(self.image, self.image, 255, 0, cv2.NORM_MINMAX)
-        cv2.imshow(self._file_name, self.image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-        self.undo()
 
 
 def create_windows(image, dimension, method="separated", min_pixels=10):
@@ -231,9 +221,6 @@ def detect_vessel_border(image):
 
         return vessel
 
-    if image.depth != 1:
-        raise RetinaException(
-            "detect vessel border should be done with binary images: " + str(image.depth))
     vessels = []
     # we should ignore vessels
     for it_x in range(1, image.size_x - 1):

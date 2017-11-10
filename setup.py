@@ -34,7 +34,7 @@ setup(
     ],
     packages=find_packages(exclude=["test"]),
     scripts=['vessel_extraction.py'],
-    install_requires=['opencv-python'],
+    install_requires=['matplotlib', 'numpy', 'pillow', 'scikit-image'],
     entry_points={
         'console_scripts': [
             'extractvessel=vessel_extraction'

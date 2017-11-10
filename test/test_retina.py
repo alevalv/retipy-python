@@ -19,9 +19,9 @@
 import os
 from unittest import TestCase
 
-import cv2
 import numpy as np
 from numpy.testing import assert_array_equal
+from skimage import color, feature, filters, io
 
 from retipy import retina
 
@@ -42,7 +42,7 @@ class TestRetina(TestCase):
 
     def test_constructor_invalid_path(self):
         """Test the retina constructor when the given path is invalid"""
-        self.assertRaises(retina.RetinaException, retina.Retina, None, _resources)
+        self.assertRaises(Exception, retina.Retina, None, _resources)
 
     def test_constructor_existing_image(self):
         """Test the constructor with an existing image"""
@@ -61,12 +61,10 @@ class TestRetina(TestCase):
 
     def test_threshold_image(self):
         self.image.threshold_image()
-        _, opencv_output = cv2.threshold(
-            cv2.cvtColor(
-                cv2.imread(_image_path), cv2.COLOR_BGR2GRAY), 127, 255, cv2.THRESH_BINARY)
-        opencv_output[opencv_output > 0] = 1
+        original_image = color.rgb2gray(io.imread(_image_path))
+        output = original_image > filters.threshold_mean(original_image)
 
-        assert_array_equal(self.image.image, opencv_output, "segmented image does not match")
+        assert_array_equal(self.image.image, output, "segmented image does not match")
 
     def test_apply_thinning(self):
         retina_image = retina.Retina(np.zeros((64, 64), np.uint8), _image_file_name)
@@ -137,11 +135,6 @@ class TestWindow(TestCase):
 
         self.assertEqual(len(vessels), 1, "only one vessel should've been extracted")
         self.assertEqual(len(vessels[0]), 14, "vessel should have 10 pixels")
-
-    def test_vessel_extractor_error_depth(self):
-        rgb_image = retina.Retina(
-            np.zeros((self._image_size, self._image_size, 3), np.uint8), "rgb")
-        self.assertRaises(retina.RetinaException, retina.detect_vessel_border, rgb_image)
 
     def test_output_filename(self):
         window = retina.Window(self._retina_image, 0, 8, 0, 0)

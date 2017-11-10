@@ -33,6 +33,7 @@ for filename in glob.glob(os.path.join(CONFIG.image_directory, '*.png')):
     positive_tortuous_windows = 0
     for window in windows:
         window.apply_thinning()
+        window.view()
         vessels = retina.detect_vessel_border(window)
         if vessels:
             for vessel in vessels:
