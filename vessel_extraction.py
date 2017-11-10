@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
 # Retipy - Retinal Image Processing on Python
 # Copyright (C) 2017  Alejandro Valdes
 #
@@ -40,4 +41,4 @@ for filename in glob.glob(os.path.join(CONFIG.image_directory, '*.png')):
                     if tortuosity.linear_regression_tortuosity(vessel):
                         positive_tortuous_windows += 1
 
-    print(str((positive_tortuous_windows/len(windows))*100) + "% of windows have tortuosity")
+    print(str((positive_tortuous_windows/len(windows))*100))

@@ -75,7 +75,6 @@ class TestRetina(TestCase):
         output = [0, 1, 1, 1, 1, 0]
         assert_array_equal(retina_image.image[10:16, 11], output, "expected a line")
 
-
     def test_save_image(self):
         self.image.save_image(".")
         self.assertTrue(os.path.isfile("./out_" + _image_file_name))

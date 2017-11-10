@@ -86,7 +86,8 @@ class Retina(object):
 
     def undo(self):
         """
-        Reverts the latest modification to the internal image, useful if you are testing different values
+        Reverts the latest modification to the internal image, useful if you are testing different
+         values
         """
         self.image = self.old_image
 
@@ -160,7 +161,7 @@ def create_windows(image, dimension, method="separated", min_pixels=10):
                     windows.append(current_window)
                     window_id += 1
 
-    print('created ' + str(window_id) + " windows")
+    #  print('created ' + str(window_id) + " windows")
     return windows
 
 
@@ -170,10 +171,19 @@ def detect_vessel_border(image):
     borders that does not overlap.
 
     Returns a list of lists with the points of each vessel.
+
+    :param image: the retinal image to extract its vessels
     """
 
     def neighbours(pixel, window):  # pragma: no cover
+        """
+        Creates a list of the neighbouring pixels for the given one. It will only
+        add to the list if the pixel has value.
 
+        :param pixel: the pixel position to extract its neighbours
+        :param window:  the window with the pixels information
+        :return: a list of pixels (list of tuples)
+        """
         x_less = max(0, pixel[0] - 1)
         y_less = max(0, pixel[1] - 1)
         x_more = min(window.size_x - 1, pixel[0] + 1)
@@ -225,11 +235,10 @@ def detect_vessel_border(image):
         raise RetinaException(
             "detect vessel border should be done with binary images: " + str(image.depth))
     vessels = []
-    for it_x in range(0, image.size_x):
-        for it_y in range(0, image.size_y):
+    # we should ignore vessels
+    for it_x in range(1, image.size_x - 1):
+        for it_y in range(1, image.size_y - 1):
             if image.image[it_x, it_y] > 0:
                 vessel = vessel_extractor(image, it_x, it_y)
                 vessels.append(vessel)
-    if vessels:
-        print("found " + str(len(vessels)) + " vessels")
     return vessels
