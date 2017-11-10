@@ -23,5 +23,5 @@ if [ ! -d "test" ]; then
     mkdir test
 fi
 
-./configurator.py -p $1 -w $2 -id $3 -ppw $4 -ss $5 -r2t $6
+./configurator.py -p $1 -id $2 -o $3 -w $4 -ppw $5 -ss $6 -r2t $7
 ./vessel_extraction.py

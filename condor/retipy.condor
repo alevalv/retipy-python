@@ -17,9 +17,9 @@
 universe = docker
 docker_image = alevalv/retipy
 executable = ./retipy.sh
-arguments = resources/retipy.config $(w) resources/images $(ppw) $(ss) $(r2t)
+arguments = resources/retipy.config resources/images output $(w) $(ppw) $(ss) $(r2t)
 should_transfer_files = YES
-transfer_input_files = vessel_extraction.py, configurator.py, resources
+transfer_input_files = vessel_extraction.py, configurator.py, retipy.sh, resources
 when_to_transfer_output = ON_EXIT
 output = retipy-output-$(w)-$(ppw)-$(ss)-$(r2t).log
 error = retipy-error.log

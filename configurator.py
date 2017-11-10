@@ -32,6 +32,7 @@ parser.add_argument(
 parser.add_argument("-ss", "--sampling-size", help="how many samples are extracted when checking tortuosity")
 parser.add_argument(
     "-r2t", "--r2-threshold", help="sets the determination coefficient to determine if a curve is tortuous")
+parser.add_argument("-o", "--output-folder", help="sets the output folder to print image results")
 
 args = parser.parse_args()
 
@@ -41,7 +42,8 @@ test_configuration[configuration.PROPERTY_DEFAULT_CATEGORY] = {
     configuration.PROPERTY_WINDOW_SIZE: args.window,
     configuration.PROPERTY_PIXELS_PER_WINDOW: args.pixels_per_window,
     configuration.PROPERTY_SAMPLING_SIZE: args.sampling_size,
-    configuration.PROPERTY_R2_THRESHOLD: args.r2_threshold
+    configuration.PROPERTY_R2_THRESHOLD: args.r2_threshold,
+    configuration.PROPERTY_OUTPUT_FOLDER: args.output_folder
 }
 with open(args.path, 'w') as configfile:
     test_configuration.write(configfile)

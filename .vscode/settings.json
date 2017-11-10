@@ -1,10 +1,12 @@
 {
     "cSpell.words": [
+        "color",
         "exception",
         "imread",
         "imshow",
         "imwrite",
         "isfile",
+        "pyplot",
         "tortuosity"
     ],
     "python.unitTest.pyTestArgs": [
