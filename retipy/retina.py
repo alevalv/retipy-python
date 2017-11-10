@@ -25,13 +25,6 @@ from matplotlib import pyplot as plt
 from lib import thinning
 
 
-class RetinaException(Exception):
-    """Basic exception to showcase errors of the retina module"""
-    def __init__(self, message):
-        super(RetinaException, self).__init__(message)
-        self.message = message
-
-
 class Retina(object):
     """
     Retina class that interally contains a matrix with the image data for a retinal image, it
@@ -40,8 +33,6 @@ class Retina(object):
     def __init__(self, image, image_path):
         if image is None:
             self.image = io.imread(image_path)
-            if self.image is None:
-                raise RetinaException("The given path is incorrect: " + image_path)
             _, file = path.split(image_path)
             self._file_name = file
         else:
