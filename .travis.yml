@@ -3,7 +3,7 @@ python: "3.6"
 
 install:
 # build dependencies
-  - pip install numpy opencv-python
+  - pip install numpy matplotlib pillow scikit-image
 # test dependencies
   - pip install coveralls
   - pip install pytest pytest-cov

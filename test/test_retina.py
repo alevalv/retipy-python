@@ -21,7 +21,7 @@ from unittest import TestCase
 
 import numpy as np
 from numpy.testing import assert_array_equal
-from skimage import color, feature, filters, io
+from skimage import color, filters, io
 
 from retipy import retina
 
