@@ -18,9 +18,11 @@
 
 mkdir -p build
 cp -r src/resources build
-cp condor/scripts/*.py condor/scripts/retipy.sh build
+cp -r condor/* build
 cp *.py build
 cd build
+mv scripts/* .
+rm -r scripts
 ./create_dagman.py
 rm create_dagman.py
 rm resources/retipy.config
