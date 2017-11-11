@@ -25,7 +25,7 @@ from skimage import color, filters, io
 
 from retipy import retina
 
-_resources = 'resources'
+_resources = 'src/resources'
 _image_file_name = 'im0001.png'
 _image_path = _resources + "/images/" + _image_file_name
 
