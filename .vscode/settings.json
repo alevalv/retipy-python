@@ -10,7 +10,7 @@
         "tortuosity"
     ],
     "python.unitTest.pyTestArgs": [
-        "test"
+        "src/test"
     ],
     "python.unitTest.pyTestEnabled": true
 }

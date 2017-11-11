@@ -23,13 +23,14 @@ import glob
 
 from retipy import configuration, retina, tortuosity
 
-CONFIG = configuration.Configuration("resources/retipy.config")
+CONFIG = configuration.Configuration("src/resources/retipy.config")
 
 for filename in glob.glob(os.path.join(CONFIG.image_directory, '*.png')):
     segmentedImage = retina.Retina(None, filename)
     segmentedImage.threshold_image()
     windows = retina.create_windows(segmentedImage, CONFIG.window_size)
-    positive_tortuous_windows = 0
+    vessel_count = 0
+    positive_tortuous_vessels = 0
     for window in windows:
         window.apply_thinning()
         vessels = retina.detect_vessel_border(window)
@@ -37,7 +38,8 @@ for filename in glob.glob(os.path.join(CONFIG.image_directory, '*.png')):
             for vessel in vessels:
                 # only check vessels of more than 6 pixels
                 if len(vessel) > 6:
+                    vessel_count += 1
                     if tortuosity.linear_regression_tortuosity(vessel):
-                        positive_tortuous_windows += 1
+                        positive_tortuous_vessels += 1
 
-    print(str((positive_tortuous_windows/len(windows))*100))
+    print("{:.2f}".format((positive_tortuous_vessels/vessel_count)*100))

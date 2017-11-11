@@ -146,7 +146,7 @@ def create_windows(image, dimension, method="separated", min_pixels=10):
     return windows
 
 
-def detect_vessel_border(image):
+def detect_vessel_border(image, ignored_pixels=1):
     """
     Extracts the vessel border of the given image, this method will try to extract all vessel
     borders that does not overlap.
@@ -154,6 +154,7 @@ def detect_vessel_border(image):
     Returns a list of lists with the points of each vessel.
 
     :param image: the retinal image to extract its vessels
+    :param ignored_pixels: how many pixels will be ignored from borders.
     """
 
     def neighbours(pixel, window):  # pragma: no cover
@@ -213,9 +214,8 @@ def detect_vessel_border(image):
         return vessel
 
     vessels = []
-    # we should ignore vessels
-    for it_x in range(1, image.size_x - 1):
-        for it_y in range(1, image.size_y - 1):
+    for it_x in range(ignored_pixels, image.size_x - ignored_pixels):
+        for it_y in range(ignored_pixels, image.size_y - ignored_pixels):
             if image.image[it_x, it_y] > 0:
                 vessel = vessel_extractor(image, it_x, it_y)
                 vessels.append(vessel)

@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 mkdir -p build
-cp -r resources build
-cp condor/* build
+cp -r src/resources build
+cp condor/scripts/*.py condor/scripts/retipy.sh build
 cp *.py build
 cd build
 ./create_dagman.py
