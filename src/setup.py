@@ -33,6 +33,5 @@ setup(
         'Programming Language :: Python :: 3.6'
     ],
     packages=find_packages(exclude=["test"]),
-    scripts=['vessel_extraction.py'],
     install_requires=['matplotlib', 'numpy', 'pillow', 'scikit-image']
     )
