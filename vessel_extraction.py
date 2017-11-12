@@ -18,12 +18,22 @@
 
 """vessel extraction script"""
 
+import argparse
 import os
 import glob
 
 from retipy import configuration, retina, tortuosity
 
-CONFIG = configuration.Configuration("src/resources/retipy.config")
+parser = argparse.ArgumentParser()
+
+parser.add_argument(
+    "-c",
+    "--configuration",
+    help="the configuration file location",
+    default="src/resources/retipy.config")
+args = parser.parse_args()
+
+CONFIG = configuration.Configuration(args.configuration)
 
 for filename in glob.glob(os.path.join(CONFIG.image_directory, '*.png')):
     segmentedImage = retina.Retina(None, filename)
