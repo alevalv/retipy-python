@@ -32,7 +32,8 @@ RUN pip --no-cache-dir install --upgrade pip && \
 
 RUN git clone git://github.com/alevalv/retipy.git /src/retipy && \
     pip install -e /src/retipy/src && \
-    cp /src/retipy/*.py /src && \
-    rm -rf /src/retipy
+    cp /src/retipy/src/*.py /src && \
+    rm -rf /src/retipy && \
+    rm /src/setup.py
 
 WORKDIR /src
