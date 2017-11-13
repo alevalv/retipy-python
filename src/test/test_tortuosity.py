@@ -22,20 +22,44 @@ from retipy import tortuosity
 
 
 class TestTortuosity(TestCase):
-    _straight_line = [[1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6], [7, 7]]
+    _straight_line =[1, 2, 3, 4, 5, 6, 7]
+
+    tortuosity.SAMPLING_SIZE = 2
 
     def test_linear_regression_tortuosity(self):
-        self.assertFalse(
-            tortuosity.linear_regression_tortuosity(self._straight_line),
-            "a straight line should return false")
+        self.assertEqual(
+            tortuosity.linear_regression_tortuosity(self._straight_line, self._straight_line),
+            1,
+            "a straight line should return 1")
 
     def test_linear_regression_tortuosity_error_size(self):
         self.assertRaises(
             tortuosity.TortuosityException,
             tortuosity.linear_regression_tortuosity,
-            [[1, 1]])
+            [1],
+            [1])
+
+    def test_linear_regression_tortuosity_no_second_try(self):
+        self.assertEqual(
+            tortuosity.linear_regression_tortuosity([1, 2, 3, 4], [1, 1, 1, 1], False),
+            1,
+            "should return 1")
 
     def test_linear_regression_tortuosity_no_interpolation(self):
-        self.assertFalse(
-            tortuosity.linear_regression_tortuosity([[1, 1], [2, 1], [3, 1], [4, 1]]),
-            "a not applicable line should return false")
+        self.assertEqual(
+            tortuosity.linear_regression_tortuosity([1, 2, 3, 4], [1, 1, 1, 1]),
+            1,
+            "should return 1")
+
+    def test_distance_2p(self):
+        self.assertEqual(tortuosity._distance_2p(0, 0, 0, 1), 1, "distance does not match")
+
+    def test_curve_length(self):
+        self.assertEqual(
+            tortuosity._curve_length([0, 0], [0, 1]), 1, "curve distance does not match")
+
+    def test_distance_measure_tortuosity(self):
+        self.assertEqual(
+            tortuosity.distance_measure_tortuosity([0, 2, 4], [0, 2, 4]),
+            1,
+            "distance measure does not match")

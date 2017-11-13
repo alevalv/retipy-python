@@ -19,8 +19,8 @@
 """vessel extraction script"""
 
 import argparse
-import os
 import glob
+import os
 
 from retipy import configuration, retina, tortuosity
 

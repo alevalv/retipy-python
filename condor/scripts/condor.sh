@@ -19,8 +19,9 @@
 mkdir -p build
 cp -r src/resources build
 cp -r condor/* build
-cp *.py build
+cp src/*.py build
 cd build
+rm setup.py
 mv scripts/* .
 rm -r scripts
 ./create_dagman.py
