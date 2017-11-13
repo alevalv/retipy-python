@@ -30,7 +30,7 @@ parser.add_argument(
     "-c",
     "--configuration",
     help="the configuration file location",
-    default="src/resources/retipy.config")
+    default="resources/retipy.config")
 args = parser.parse_args()
 
 CONFIG = configuration.Configuration(args.configuration)
@@ -47,9 +47,8 @@ for filename in glob.glob(os.path.join(CONFIG.image_directory, '*.png')):
         if vessels:
             for vessel in vessels:
                 # only check vessels of more than 6 pixels
-                if len(vessel) > 6:
+                if len(vessel[0]) > 6:
                     vessel_count += 1
-                    if tortuosity.linear_regression_tortuosity(vessel):
+                    if tortuosity.linear_regression_tortuosity(vessel[0], vessel[1]) < CONFIG.r_2_threshold:
                         positive_tortuous_vessels += 1
-
     print("{:.2f}".format((positive_tortuous_vessels/vessel_count)*100))

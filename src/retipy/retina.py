@@ -211,7 +211,12 @@ def detect_vessel_border(image, ignored_pixels=1):
         # sort by x position
         vessel.sort(key=lambda item: item[0])
 
-        return vessel
+        vessel_x = []
+        vessel_y = []
+        for pixel in vessel:
+            vessel_x.append(pixel[0])
+            vessel_y.append(pixel[1])
+        return [vessel_x, vessel_y]
 
     vessels = []
     for it_x in range(ignored_pixels, image.size_x - ignored_pixels):

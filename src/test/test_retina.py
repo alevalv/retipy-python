@@ -134,7 +134,7 @@ class TestWindow(TestCase):
         vessels = retina.detect_vessel_border(self._retina_image)
 
         self.assertEqual(len(vessels), 1, "only one vessel should've been extracted")
-        self.assertEqual(len(vessels[0]), 14, "vessel should have 10 pixels")
+        self.assertEqual(len(vessels[0][0]), 14, "vessel should have 14 pixels")
 
     def test_output_filename(self):
         window = retina.Window(self._retina_image, 0, 8, 0, 0)
