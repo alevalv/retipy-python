@@ -63,3 +63,7 @@ class TestTortuosity(TestCase):
             tortuosity.distance_measure_tortuosity([0, 2, 4], [0, 2, 4]),
             1,
             "distance measure does not match")
+
+    def test_distance_measure_tortuosity_error(self):
+        self.assertRaises(
+            tortuosity.TortuosityException, tortuosity.distance_measure_tortuosity, [1], [2])
