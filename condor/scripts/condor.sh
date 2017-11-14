@@ -20,6 +20,7 @@ mkdir -p build
 cp -r src/resources build
 cp -r condor/* build
 cp src/*.py build
+cp -r src build
 cd build
 rm setup.py
 mv scripts/* .

@@ -18,6 +18,7 @@
 
 import argparse
 import re
+import sys
 from os import listdir
 from os.path import isfile, join
 
@@ -32,6 +33,7 @@ files = [f for f in listdir(directory) if (isfile(join(directory, f)) and f.ends
 
 output = ""
 S = ','
+empty_files = 0
 for file in files:
     content = open(directory + '/' + file).readline()
     if content:
@@ -41,3 +43,7 @@ for file in files:
         ss = parsed_file.group(3)
         r2t = parsed_file.group(4)
         print(w + S + ppw + S + ss + S + r2t + S + str(float(content)))
+    else:
+        empty_files += 1
+
+print("{} files had no values".format(empty_files),  file=sys.stderr)

@@ -35,6 +35,11 @@ args = parser.parse_args()
 
 CONFIG = configuration.Configuration(args.configuration)
 
+FILE_NAME = "{:03d}-{:02d}-{:02d}-{:.2f}.txt".format(
+    CONFIG.window_size, CONFIG.pixels_per_window, CONFIG.sampling_size, CONFIG.r_2_threshold)
+
+FILE = open(CONFIG.output_folder + '/' + FILE_NAME, 'x')
+
 for filename in glob.glob(os.path.join(CONFIG.image_directory, '*.png')):
     segmentedImage = retina.Retina(None, filename)
     segmentedImage.threshold_image()
@@ -49,6 +54,8 @@ for filename in glob.glob(os.path.join(CONFIG.image_directory, '*.png')):
                 # only check vessels of more than 6 pixels
                 if len(vessel[0]) > 6:
                     vessel_count += 1
-                    if tortuosity.linear_regression_tortuosity(vessel[0], vessel[1]) < CONFIG.r_2_threshold:
+                    if (tortuosity.linear_regression_tortuosity(vessel[0], vessel[1]) <
+                            CONFIG.r_2_threshold):
                         positive_tortuous_vessels += 1
-    print("{:.2f}".format((positive_tortuous_vessels/vessel_count)*100))
+    FILE.write("{:.2f}".format((positive_tortuous_vessels/vessel_count)*100))
+FILE.close()

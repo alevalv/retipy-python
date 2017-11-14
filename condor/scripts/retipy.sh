@@ -23,5 +23,7 @@ if [ ! -d "test" ]; then
     mkdir test
 fi
 
+pip install -e src
+
 ./configurator.py -p $1 -id $2 -o $3 -w $4 -ppw $5 -ss $6 -r2t $7
 ./vessel_extraction.py -c $1
