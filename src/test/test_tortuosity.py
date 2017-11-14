@@ -17,6 +17,7 @@
 """tests for tortuosity module"""
 
 from unittest import TestCase
+from numpy.testing import assert_array_equal
 
 from retipy import tortuosity
 
@@ -67,3 +68,15 @@ class TestTortuosity(TestCase):
     def test_distance_measure_tortuosity_error(self):
         self.assertRaises(
             tortuosity.TortuosityException, tortuosity.distance_measure_tortuosity, [1], [2])
+
+    def test_detect_inflection_points(self):
+        assert_array_equal(
+            [2, 3, 4],
+            tortuosity._detect_inflection_points([0, 1, 2, 3, 4, 5], [4, 6, 8, 6, 9, 0]),
+            "inflection points does not match")
+
+    def test_distance_inflection_count_tortuosity(self):
+        self.assertEqual(
+            tortuosity.distance_inflection_count_tortuosity([0, 2, 4], [0, 2, 4]),
+            2,
+            "inflection count tortuosity value does not match")

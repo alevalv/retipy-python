@@ -17,6 +17,7 @@
 """Module with operations related to extracting tortuosity measures."""
 
 import cmath
+import numpy as np
 
 
 class TortuosityException(Exception):
@@ -63,6 +64,16 @@ def _chord_length(x, y):
     :return: the chord length of the given curve
     """
     return _distance_2p(x[0], y[0], x[len(x) - 1], y[len(y) - 1])
+
+
+def _detect_inflection_points(x, y):
+    df = np.diff(y)
+    cf = np.convolve(y, [1, -1])
+    inflection_points = []
+    for iterator in range(1, len(x)):
+        if np.sign(cf[iterator]) != np.sign(cf[iterator - 1]):
+            inflection_points.append(x[iterator - 1])
+    return inflection_points
 
 
 def linear_regression_tortuosity(x, y, retry=True):
@@ -129,6 +140,7 @@ def distance_measure_tortuosity(x, y):
 
     :param x: the list of x points of the curve
     :param y: the list of y points of the curve
+    :return: the arc-chord tortuosity measure
     """
     if len(x) < 2:
         raise TortuosityException("Given curve must have at least 2 elements")
@@ -136,3 +148,13 @@ def distance_measure_tortuosity(x, y):
     return _curve_length(x, y) / _chord_length(x, y)
 
 
+def distance_inflection_count_tortuosity(x, y):
+    """
+    Calculates the tortuosity by using arc-chord ratio multiplied by the curve inflection count
+    plus 1
+
+    :param x: the list of x points of the curve
+    :param y: the list of y points of the curve
+    :return: the inflection count tortuosity
+    """
+    return distance_measure_tortuosity(x, y) * (len(_detect_inflection_points(x, y)) + 1)
