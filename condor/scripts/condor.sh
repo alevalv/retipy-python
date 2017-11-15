@@ -21,6 +21,7 @@ cp -r src/resources build
 cp -r condor/* build
 cp src/*.py build
 cp -r src/retipy build
+cp -r src/lib build
 cd build
 rm setup.py
 mv scripts/* .
