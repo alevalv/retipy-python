@@ -40,7 +40,7 @@ FILE_NAME = "{:03d}-{:02d}-{:02d}-{:.2f}.txt".format(
 
 FILE = open(CONFIG.output_folder + '/' + FILE_NAME, 'w')
 
-for filename in glob.glob(os.path.join(CONFIG.image_directory, '*.png')):
+for filename in sorted(glob.glob(os.path.join(CONFIG.image_directory, '*.png'))):
     segmentedImage = retina.Retina(None, filename)
     segmentedImage.threshold_image()
     windows = retina.create_windows(segmentedImage, CONFIG.window_size)

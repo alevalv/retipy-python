@@ -35,15 +35,15 @@ output = ""
 S = ','
 empty_files = 0
 for file in files:
-    content = open(directory + '/' + file).readline()
-    if content:
-        parsed_file = re.search('retipy-output-(\d+)-(\d+)-(\d+)-(0\.\d+)\.log', file)
+    content = open(directory + '/' + file)
+    current_image = 1
+    for line in content:
+        parsed_file = re.search('(\d+)-(\d+)-(\d+)-(0\.\d+)' + args.extension, file)
         w = parsed_file.group(1)
         ppw = parsed_file.group(2)
         ss = parsed_file.group(3)
         r2t = parsed_file.group(4)
-        print(w + S + ppw + S + ss + S + r2t + S + str(float(content)))
-    else:
-        empty_files += 1
+        print(str(current_image) + S + w + S + ppw + S + ss + S + r2t + S + str(float(content)))
+        current_image += 1
 
-print("{} files had no values".format(empty_files),  file=sys.stderr)
+#print("{} files had no values".format(empty_files),  file=sys.stderr)
