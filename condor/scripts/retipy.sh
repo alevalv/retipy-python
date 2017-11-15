@@ -19,8 +19,8 @@
 set -e
 
 # create the folder test if it doesn't exist
-if [ ! -d "test" ]; then
-    mkdir test
+if [ ! -d "output" ]; then
+    mkdir output
 fi
 
 ./configurator.py -p $1 -id $2 -o $3 -w $4 -ppw $5 -ss $6 -r2t $7

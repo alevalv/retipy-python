@@ -38,7 +38,7 @@ CONFIG = configuration.Configuration(args.configuration)
 FILE_NAME = "{:03d}-{:02d}-{:02d}-{:.2f}.txt".format(
     CONFIG.window_size, CONFIG.pixels_per_window, CONFIG.sampling_size, CONFIG.r_2_threshold)
 
-FILE = open(CONFIG.output_folder + '/' + FILE_NAME, 'x')
+FILE = open(CONFIG.output_folder + '/' + FILE_NAME, 'w')
 
 for filename in glob.glob(os.path.join(CONFIG.image_directory, '*.png')):
     segmentedImage = retina.Retina(None, filename)
