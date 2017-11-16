@@ -43,7 +43,9 @@ for file in files:
         ppw = parsed_file.group(2)
         ss = parsed_file.group(3)
         r2t = parsed_file.group(4)
-        print(str(current_image) + S + w + S + ppw + S + ss + S + r2t + S + str(float(content)))
-        current_image += 1
+        if line:
+            print("{:02d},{},{},{},{},{:.3f}".format(
+                current_image, w, ppw, ss, r2t, float(line)))
+            current_image += 1
 
 #print("{} files had no values".format(empty_files),  file=sys.stderr)

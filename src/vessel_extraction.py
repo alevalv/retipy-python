@@ -57,5 +57,5 @@ for filename in sorted(glob.glob(os.path.join(CONFIG.image_directory, '*.png')))
                     if (tortuosity.linear_regression_tortuosity(vessel[0], vessel[1]) <
                             CONFIG.r_2_threshold):
                         positive_tortuous_vessels += 1
-    FILE.write("{:.2f}".format((positive_tortuous_vessels/vessel_count)*100))
+    FILE.write("{:.2f}\n".format((positive_tortuous_vessels/vessel_count)*100))
 FILE.close()
