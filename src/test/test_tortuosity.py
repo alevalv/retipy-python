@@ -19,7 +19,7 @@
 from unittest import TestCase
 from numpy.testing import assert_array_equal
 
-from retipy import tortuosity
+from retipy import tortuosity, retina
 
 
 class TestTortuosity(TestCase):
@@ -80,3 +80,6 @@ class TestTortuosity(TestCase):
             tortuosity.distance_inflection_count_tortuosity([0, 2, 4], [0, 2, 4]),
             2,
             "inflection count tortuosity value does not match")
+
+    def test_fractal_tortuosity(self):
+        print(tortuosity.fractal_tortuosity(retina.Retina(None, "src/resources/images/im0001.png")))

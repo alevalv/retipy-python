@@ -19,15 +19,14 @@
 import cmath
 import numpy as np
 
+from lib import fractal_dimension
+
 
 class TortuosityException(Exception):
     """Basic exception to showcase errors of the tortuosity module"""
     def __init__(self, message):
         super(TortuosityException, self).__init__(message)
         self.message = message
-
-
-SAMPLING_SIZE = 6
 
 
 def _distance_2p(x1, y1, x2, y2):
@@ -76,7 +75,7 @@ def _detect_inflection_points(x, y):
     return inflection_points
 
 
-def linear_regression_tortuosity(x, y, retry=True):
+def linear_regression_tortuosity(x, y, sampling_size=6, retry=True):
     """
     This method calculates a tortuosity measure by estimating a line that start and ends with the
     first and last points of the given curve, then samples a number of pixels from the given line
@@ -88,6 +87,7 @@ def linear_regression_tortuosity(x, y, retry=True):
     Returns the determination coefficient for the given curve
     :param x: the x component of the curve
     :param y: the y component of the curve
+    :param sampling_size: how many pixels
     :param retry: if regression fails due to a zero division, try again by inverting x and y
     """
     if len(x) < 4:
@@ -100,7 +100,7 @@ def linear_regression_tortuosity(x, y, retry=True):
 
         y_intercept = min_point_y - slope*min_point_x
 
-        sample_distance = round(len(x) / SAMPLING_SIZE)
+        sample_distance = max(round(len(x) / sampling_size), 1)
 
         # linear regression function
         def f_y(x1):
@@ -109,7 +109,7 @@ def linear_regression_tortuosity(x, y, retry=True):
         # calculate y_average
         y_average = 0
         item_count = 0
-        for i in range(0, len(x), sample_distance):
+        for i in range(1, len(x) - 1, sample_distance):
             y_average += y[i]
             item_count += 1
         y_average /= item_count
@@ -125,7 +125,7 @@ def linear_regression_tortuosity(x, y, retry=True):
     except ZeroDivisionError:
         if retry:
             #  try inverting x and y
-            r_2 = linear_regression_tortuosity(y, x, False)
+            r_2 = linear_regression_tortuosity(y, x, retry=False)
         else:
             r_2 = 1  # mark not applicable vessels as not tortuous?
     return r_2
@@ -158,3 +158,7 @@ def distance_inflection_count_tortuosity(x, y):
     :return: the inflection count tortuosity
     """
     return distance_measure_tortuosity(x, y) * (len(_detect_inflection_points(x, y)) + 1)
+
+
+def fractal_tortuosity(image):
+    return fractal_dimension.fractal_dimension(image.image)

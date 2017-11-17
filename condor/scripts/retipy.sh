@@ -23,5 +23,8 @@ if [ ! -d "output" ]; then
     mkdir output
 fi
 
+# create the configuration file for this execution, using the passed parameters
 ./configurator.py -p $1 -id $2 -o $3 -w $4 -ppw $5 -ss $6 -r2t $7
-./vessel_extraction.py -c $1
+
+# execute the algorithm
+./x_linear_tortuosity.py -c $1

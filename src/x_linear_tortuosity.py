@@ -16,7 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""vessel extraction script"""
+"""
+script to estimate the linear tortuosity of a set of retinal images, it will output the values
+to a file in the output folder defined in the configuration. The output will only have the
+estimated value and it is sorted by image file name.
+"""
 
 import argparse
 import glob
@@ -43,7 +47,7 @@ FILE = open(CONFIG.output_folder + '/' + FILE_NAME, 'w')
 for filename in sorted(glob.glob(os.path.join(CONFIG.image_directory, '*.png'))):
     segmentedImage = retina.Retina(None, filename)
     segmentedImage.threshold_image()
-    windows = retina.create_windows(segmentedImage, CONFIG.window_size)
+    windows = retina.create_windows(segmentedImage, CONFIG.window_size, min_pixels=CONFIG.pixels_per_window)
     vessel_count = 0
     positive_tortuous_vessels = 0
     for window in windows:
@@ -54,7 +58,7 @@ for filename in sorted(glob.glob(os.path.join(CONFIG.image_directory, '*.png')))
                 # only check vessels of more than 6 pixels
                 if len(vessel[0]) > 6:
                     vessel_count += 1
-                    if (tortuosity.linear_regression_tortuosity(vessel[0], vessel[1]) <
+                    if (tortuosity.linear_regression_tortuosity(vessel[0], vessel[1], CONFIG.sampling_size) <
                             CONFIG.r_2_threshold):
                         positive_tortuous_vessels += 1
     FILE.write("{:.2f}\n".format((positive_tortuous_vessels/vessel_count)*100))
