@@ -27,8 +27,11 @@ from lib import thinning
 
 class Retina(object):
     """
-    Retina class that interally contains a matrix with the image data for a retinal image, it
+    Retina class that internally contains a matrix with the image data for a retinal image, it
     constructor expects a path to the image
+
+    :param image: a numpy array with the image data
+    :param image_path: path to an image to be open
     """
     def __init__(self, image, image_path):
         if image is None:

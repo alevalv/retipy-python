@@ -27,4 +27,4 @@ fi
 ./configurator.py -p $1 -id $2 -o $3 -w $4 -ppw $5 -ss $6 -r2t $7
 
 # execute the algorithm
-./x_linear_tortuosity.py -c $1
+./x_tortuosity.py -c $1 -a fractal
