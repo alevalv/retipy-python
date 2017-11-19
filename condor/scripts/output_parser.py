@@ -18,7 +18,6 @@
 
 import argparse
 import re
-import sys
 from os import listdir
 from os.path import isfile, join
 
@@ -37,15 +36,13 @@ empty_files = 0
 for file in files:
     content = open(directory + '/' + file)
     current_image = 1
+    parsed_file = re.search('(\d+)-(\d+)-(\d+)-(0\.\d+)' + args.extension, file)
+    w = parsed_file.group(1)
+    ppw = parsed_file.group(2)
+    ss = parsed_file.group(3)
+    r2t = parsed_file.group(4)
     for line in content:
-        parsed_file = re.search('(\d+)-(\d+)-(\d+)-(0\.\d+)' + args.extension, file)
-        w = parsed_file.group(1)
-        ppw = parsed_file.group(2)
-        ss = parsed_file.group(3)
-        r2t = parsed_file.group(4)
         if line:
-            print("{:02d},{},{},{},{},{:.3f}".format(
-                current_image, w, ppw, ss, r2t, float(line)))
+            print("{:02d},{},{},{},{},{}".format(
+                current_image, w, ppw, ss, r2t, line))
             current_image += 1
-
-#print("{} files had no values".format(empty_files),  file=sys.stderr)

@@ -28,7 +28,7 @@ USER retipy
 ADD matplotlibrc /home/keras/.config/matplotlib/matplotlibrc
 
 RUN pip --no-cache-dir install --upgrade pip && \
-    pip --no-cache-dir install setuptools numpy matplotlib pillow scikit-image
+    pip --no-cache-dir install setuptools numpy matplotlib pillow scikit-image scipy
 
 RUN git clone git://github.com/alevalv/retipy.git /src/retipy && \
     pip install -e /src/retipy/src && \

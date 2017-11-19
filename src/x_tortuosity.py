@@ -84,6 +84,6 @@ for filename in sorted(glob.glob(os.path.join(CONFIG.image_directory, '*.png')))
         mode = stats.mode(fractal_dimensions)
         FILE.write("{:.3f},{:.3f},{:.3f}\n".format(average, median, mode[0][0]))
     else:
-        print("nothing to see here citizen, move along", file66=sys.stderr)
+        print("nothing to see here citizen, move along", file=sys.stderr)
 
 FILE.close()

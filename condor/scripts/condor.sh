@@ -29,4 +29,4 @@ rm -r scripts
 ./create_dagman.py
 rm create_dagman.py
 rm resources/retipy.config
-condor_submit_dag retipy.dag
+# condor_submit_dag retipy.dag
