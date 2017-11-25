@@ -25,5 +25,6 @@ transfer_output_files = output
 output = retipy-output.log
 error = retipy-error.log
 log = retipy-condor.log
+request_memory = 2048M
 queue 1
 

@@ -20,6 +20,7 @@ from os import path
 from copy import copy
 import warnings
 
+from scipy import ndimage
 from skimage import color, feature, filters, io
 from matplotlib import pyplot as plt
 from lib import thinning
@@ -35,18 +36,18 @@ class Retina(object):
     """
     def __init__(self, image, image_path):
         if image is None:
-            self.image = io.imread(image_path)
+            self.np_image = io.imread(image_path)
             _, file = path.split(image_path)
             self._file_name = file
         else:
-            self.image = image
+            self.np_image = image
             self._file_name = image_path
 
         self.segmented = False
-        self.size_x = self.image.shape[0]
-        self.size_y = self.image.shape[1]
+        self.size_x = self.np_image.shape[0]
+        self.size_y = self.np_image.shape[1]
         self.old_image = None
-        self.image = color.rgb2gray(self.image)
+        self.np_image = color.rgb2gray(self.np_image)
         self.depth = 1
 
 ##################################################################################################
@@ -54,36 +55,54 @@ class Retina(object):
 
     def threshold_image(self):
         """Applies a thresholding algorithm to the contained image."""
-        threshold = filters.threshold_mean(self.image)
-        self.image = self.image > threshold
+        threshold = filters.threshold_mean(self.np_image)
+        self.np_image = self.np_image > threshold
         self.depth = 1
 
     def detect_edges_canny(self, min_val=0, max_val=1):
         """
-        Applies canny edge detection to the contained image. Fine tuning of the
+        Applies canny edge detection to the contained image. Fine tuning of the algorithm can be
+        done using min_val and max_val
         """
         self._copy()
-        self.image = feature.canny(self.image, low_threshold=min_val, high_threshold=max_val)
+        self.np_image = feature.canny(self.np_image, low_threshold=min_val, high_threshold=max_val)
 
     def apply_thinning(self):
         """Applies a thinning algorithm on the stored image"""
         self._copy()
-        self.image = thinning.thinning_zhang_suen(self.image)
+        self.np_image = thinning.thinning_zhang_suen(self.np_image)
+
+    def erode(self, times):
+        """
+        Erodes the stored image
+        :param times: number of times that the image will be eroded
+        """
+        self._copy()
+        self.np_image = ndimage.binary_erosion(self.np_image, iterations=times)
+
+    def dilate(self, times):
+        """
+        dilates the stored image
+        :param times: number of times that the image will be dilated
+        """
+        self._copy()
+        self.np_image = ndimage.binary_dilation(self.np_image, iterations=times)
 
 ##################################################################################################
 # I/O functions
 
     def _copy(self):
-        self.old_image = copy(self.image)
+        self.old_image = copy(self.np_image)
 
     def undo(self):
         """
         Reverts the latest modification to the internal image, useful if you are testing different
          values
         """
-        self.image = self.old_image
+        self.np_image = self.old_image
 
     def filename(self):
+        """Returns the filename of the retina image."""
         return self._file_name
 
     def _output_filename(self):
@@ -93,11 +112,11 @@ class Retina(object):
         """Saves the image in the given output folder, the name will be out_<original_image_name>"""
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            io.imsave(output_folder + self._output_filename(), self.image)
+            io.imsave(output_folder + self._output_filename(), self.np_image)
 
     def view(self):  # pragma: no cover
         """show a window with the internal image"""
-        io.imshow(self.image)
+        io.imshow(self.np_image)
         plt.show()
 
 
@@ -105,7 +124,7 @@ class Window(Retina):
     """a ROI (Region of Interest) that extends the Retina class"""
     def __init__(self, image, window_id, dimension, start_x, start_y):
         super(Window, self).__init__(
-            image.image[start_x:(start_x + dimension), start_y:(start_y + dimension)],
+            image.np_image[start_x:(start_x + dimension), start_y:(start_y + dimension)],
             image.filename())
         self.window_id = window_id
         self._x = start_x
@@ -131,7 +150,7 @@ def create_windows(image, dimension, method="separated", min_pixels=10):
         for x in range(0, image.size_x, dimension):
             for y in range(0, image.size_y, dimension):
                 current_window = Window(image, window_id, dimension, x, y)
-                pixel_values = current_window.image.sum()
+                pixel_values = current_window.np_image.sum()
                 if pixel_values > min_pixels:
                     windows.append(current_window)
                     window_id += 1
@@ -140,7 +159,7 @@ def create_windows(image, dimension, method="separated", min_pixels=10):
         for x in range(0, image.size_x - new_dimension, new_dimension):
             for y in range(0, image.size_y - new_dimension, new_dimension):
                 current_window = Window(image, window_id, dimension, x, y)
-                pixel_values = current_window.image.sum()
+                pixel_values = current_window.np_image.sum()
                 if pixel_values > min_pixels:
                     windows.append(current_window)
                     window_id += 1
@@ -176,21 +195,21 @@ def detect_vessel_border(image, ignored_pixels=1):
 
         active_neighbours = []
 
-        if window.image[x_less, y_less] > 0:
+        if window.np_image[x_less, y_less] > 0:
             active_neighbours.append([x_less, y_less])
-        if window.image[x_less, pixel[1]] > 0:
+        if window.np_image[x_less, pixel[1]] > 0:
             active_neighbours.append([x_less, pixel[1]])
-        if window.image[x_less, y_more] > 0:
+        if window.np_image[x_less, y_more] > 0:
             active_neighbours.append([x_less, y_more])
-        if window.image[pixel[0], y_less] > 0:
+        if window.np_image[pixel[0], y_less] > 0:
             active_neighbours.append([pixel[0], y_less])
-        if window.image[pixel[0], y_more] > 0:
+        if window.np_image[pixel[0], y_more] > 0:
             active_neighbours.append([pixel[0], y_more])
-        if window.image[x_more, y_less] > 0:
+        if window.np_image[x_more, y_less] > 0:
             active_neighbours.append([x_more, y_less])
-        if window.image[x_more, pixel[1]] > 0:
+        if window.np_image[x_more, pixel[1]] > 0:
             active_neighbours.append([x_more, pixel[1]])
-        if window.image[x_more, y_more] > 0:
+        if window.np_image[x_more, y_more] > 0:
             active_neighbours.append([x_more, y_more])
 
         return active_neighbours
@@ -204,9 +223,9 @@ def detect_vessel_border(image, ignored_pixels=1):
         pending_pixels = [[start_x, start_y]]
         while pending_pixels:
             pixel = pending_pixels.pop(0)
-            if window.image[pixel[0], pixel[1]] > 0:
+            if window.np_image[pixel[0], pixel[1]] > 0:
                 vessel.append(pixel)
-                window.image[pixel[0], pixel[1]] = 0
+                window.np_image[pixel[0], pixel[1]] = 0
 
                 # add the neighbours with value to pending list:
                 pending_pixels.extend(neighbours(pixel, window))
@@ -224,7 +243,7 @@ def detect_vessel_border(image, ignored_pixels=1):
     vessels = []
     for it_x in range(ignored_pixels, image.size_x - ignored_pixels):
         for it_y in range(ignored_pixels, image.size_y - ignored_pixels):
-            if image.image[it_x, it_y] > 0:
+            if image.np_image[it_x, it_y] > 0:
                 vessel = vessel_extractor(image, it_x, it_y)
                 vessels.append(vessel)
     return vessels

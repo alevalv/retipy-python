@@ -10,10 +10,15 @@
 import numpy as np
 
 
-def fractal_dimension(Z, threshold=0.9):
+def fractal_dimension(b_image):
+    """
+    Calculates the fractal dimension of the given binary image Z
+    :param b_image: a binary 2d image
+    :return: the Minkowski–Bouligand dimension of the image
+    """
 
     # Only for 2d image
-    assert(len(Z.shape) == 2)
+    assert(len(b_image.shape) == 2)
 
     # From https://github.com/rougier/numpy-100 (#87)
     def boxcount(Z, k):
@@ -24,12 +29,8 @@ def fractal_dimension(Z, threshold=0.9):
         # We count non-empty (0) and non-full boxes (k*k)
         return len(np.where((S > 0) & (S < k*k))[0])
 
-
-    # Transform Z into a binary array
-    Z = (Z < threshold)
-
     # Minimal dimension of image
-    p = min(Z.shape)
+    p = min(b_image.shape)
 
     # Greatest power of 2 less than or equal to p
     n = 2**np.floor(np.log(p)/np.log(2))
@@ -43,7 +44,7 @@ def fractal_dimension(Z, threshold=0.9):
     # Actual box counting with decreasing size
     counts = []
     for size in sizes:
-        counts.append(boxcount(Z, size))
+        counts.append(boxcount(b_image, size))
 
     # Fit the successive log(sizes) with log (counts)
     coeffs = np.polyfit(np.log(sizes), np.log(counts), 1)

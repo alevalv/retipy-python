@@ -6,7 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-f", "--file", help="csv file to read")
+parser.add_argument("-f1", "--file1", help="csv file to read")
+parser.add_argument("-f2", "--file2", help="csv file to read")
 parser.add_argument("-c1", help="column 1")
 parser.add_argument("-c2", help="column 2")
 parser.add_argument("-c3", help="column 3")
@@ -42,18 +43,20 @@ pgf_with_latex = {                      # setup matplotlib to use latex for outp
     }
 mpl.rcParams.update(pgf_with_latex)
 
-DATA = np.genfromtxt(args.file, delimiter=',', names=['w', 'average'])
-
-
+DATA1 = np.genfromtxt(args.file1, delimiter=',', names=['1', '2'])
+DATA2 = np.genfromtxt(args.file2, delimiter=',', names=['1', '2'])
 
 FIG = plt.figure()
 
 ax1 = FIG.add_subplot(111)
 ax1.grid(True)
 
-ax1.plot(DATA['w'], DATA['average'])
+ax1.plot(DATA1['1'], DATA1['2'], label="Eroded")
+ax1.plot(DATA2['1'], DATA2['2'], label="Original")
+ax1.legend(loc='best')
 
-ax1.set_xlabel('Window')
-ax1.set_ylabel('Percentage of Tortuous Vessels')
+ax1.set_xlabel('Image')
+ax1.set_ylabel('Fractal Dimension')
+ax1.set_xticks(range(1, 21, 1))
 
 plt.show()

@@ -160,5 +160,5 @@ def distance_inflection_count_tortuosity(x, y):
     return distance_measure_tortuosity(x, y) * (len(_detect_inflection_points(x, y)) + 1)
 
 
-def fractal_tortuosity(image):
-    return fractal_dimension.fractal_dimension(image.image)
+def fractal_tortuosity(retinal_image):
+    return fractal_dimension.fractal_dimension(retinal_image.np_image)

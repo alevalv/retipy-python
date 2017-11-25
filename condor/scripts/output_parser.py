@@ -18,6 +18,7 @@
 
 import argparse
 import re
+import sys
 from os import listdir
 from os.path import isfile, join
 
@@ -46,3 +47,6 @@ for file in files:
             print("{:02d},{},{},{},{},{}".format(
                 current_image, w, ppw, ss, r2t, line))
             current_image += 1
+    empty_files += 20 - min(20, current_image)
+
+print("missing {} image values".format(empty_files),  file=sys.stderr)

@@ -24,10 +24,10 @@ estimated value and it is sorted by image file name.
 
 import argparse
 import glob
-import numpy as np
+# import numpy as np
 import os
-import scipy.stats as stats
 import sys
+# import scipy.stats as stats
 
 from retipy import configuration, retina, tortuosity
 
@@ -48,18 +48,24 @@ _LINEAR_ALGORITHM = "linear"
 _FRACTAL_ALGORITHM = "fractal"
 args = parser.parse_args()
 
+ALGORITHM = args.algorithm
 CONFIG = configuration.Configuration(args.configuration)
 
-FILE_NAME = "{:03d}-{:02d}-{:02d}-{:.2f}.txt".format(
-    CONFIG.window_size, CONFIG.pixels_per_window, CONFIG.sampling_size, CONFIG.r_2_threshold)
+FILE_NAME = "{}-{:03d}-{:02d}-{:02d}-{:.2f}.txt".format(
+    ALGORITHM,
+    CONFIG.window_size,
+    CONFIG.pixels_per_window,
+    CONFIG.sampling_size,
+    CONFIG.r_2_threshold)
 
 FILE = open(CONFIG.output_folder + '/' + FILE_NAME, 'w')
 
 for filename in sorted(glob.glob(os.path.join(CONFIG.image_directory, '*.png'))):
     segmentedImage = retina.Retina(None, filename)
     segmentedImage.threshold_image()
-    windows = retina.create_windows(segmentedImage, CONFIG.window_size, min_pixels=CONFIG.pixels_per_window)
-    if args.algorithm == _LINEAR_ALGORITHM:
+    windows = retina.create_windows(
+        segmentedImage, CONFIG.window_size, min_pixels=CONFIG.pixels_per_window, method="combined")
+    if ALGORITHM == _LINEAR_ALGORITHM:
         vessel_count = 0
         positive_tortuous_vessels = 0
         for window in windows:
@@ -68,21 +74,27 @@ for filename in sorted(glob.glob(os.path.join(CONFIG.image_directory, '*.png')))
             if vessels:
                 for vessel in vessels:
                     # only check vessels of more than 6 pixels
-                    if len(vessel[0]) > 6:
+                    if len(vessel[0]) > CONFIG.pixels_per_window:
                         vessel_count += 1
-                        if (tortuosity.linear_regression_tortuosity(vessel[0], vessel[1], CONFIG.sampling_size) <
-                                CONFIG.r_2_threshold):
+                        if (tortuosity.linear_regression_tortuosity(
+                                vessel[0], vessel[1], CONFIG.sampling_size)
+                                < CONFIG.r_2_threshold):
                             positive_tortuous_vessels += 1
         FILE.write("{:.2f}\n".format((positive_tortuous_vessels/vessel_count)*100))
-    elif args.algorithm == _FRACTAL_ALGORITHM:
-        fractal_dimensions = []
-        for window in windows:
-            #  window.apply_thinning()  //do we want to check on a skeleton?
-            fractal_dimensions.append(tortuosity.fractal_tortuosity(window))
-        average = np.average(fractal_dimensions)
-        median = np.median(fractal_dimensions)
-        mode = stats.mode(fractal_dimensions)
-        FILE.write("{:.3f},{:.3f},{:.3f}\n".format(average, median, mode[0][0]))
+    elif ALGORITHM == _FRACTAL_ALGORITHM:
+
+        ## uncomment the following lines to apply the fractal dimension algorithm on created
+        ##  windows.
+        # for window in windows:
+        #     fractal_dimensions.append(tortuosity.fractal_tortuosity(window))
+        # average = np.average(fractal_dimensions)
+        # median = np.median(fractal_dimensions)
+        # mode = stats.mode(fractal_dimensions)
+        # FILE.write("{:.3f},{:.3f},{:.3f}\n".format(average, median, mode[0][0]))
+
+        segmentedImage.erode(1)
+        dimension = tortuosity.fractal_tortuosity(segmentedImage)
+        FILE.write("{:.5f}\n".format(dimension))
     else:
         print("nothing to see here citizen, move along", file=sys.stderr)
 

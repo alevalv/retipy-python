@@ -82,4 +82,4 @@ class TestTortuosity(TestCase):
             "inflection count tortuosity value does not match")
 
     def test_fractal_tortuosity(self):
-        print(tortuosity.fractal_tortuosity(retina.Retina(None, "src/resources/images/im0001.png")))
+        print(tortuosity.fractal_tortuosity(retina.Retina(None, "src/resources/images/img1.png")))

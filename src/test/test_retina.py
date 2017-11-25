@@ -21,12 +21,13 @@ from unittest import TestCase
 
 import numpy as np
 from numpy.testing import assert_array_equal
+from scipy import ndimage
 from skimage import color, filters, io
 
 from retipy import retina
 
 _resources = 'src/resources'
-_image_file_name = 'im0001.png'
+_image_file_name = 'img1.png'
 _image_path = _resources + "/images/" + _image_file_name
 
 
@@ -34,7 +35,7 @@ class TestRetina(TestCase):
     """Test class for Retina class"""
 
     def setUp(self):
-        self.image = retina.Retina(None, _image_path)
+        self.np_image = retina.Retina(None, _image_path)
 
     def tearDown(self):
         if os.path.isfile("./out_" + _image_file_name):
@@ -47,45 +48,61 @@ class TestRetina(TestCase):
     def test_constructor_existing_image(self):
         """Test the constructor with an existing image"""
         image = retina.Retina(None, _image_path)
-        none_constructor_image = retina.Retina(image.image, _image_file_name)
+        none_constructor_image = retina.Retina(image.np_image, _image_file_name)
 
-        assert_array_equal(image.image, none_constructor_image.image, "created images should be the same")
+        assert_array_equal(image.np_image, none_constructor_image.np_image, "created images should be the same")
 
     def test_segmented(self):
         """Test default value for segmented property"""
         self.assertEqual(
-            False, self.image.segmented, "segmented should be false by default")
-        self.image.segmented = True
+            False, self.np_image.segmented, "segmented should be false by default")
+        self.np_image.segmented = True
         self.assertEqual(
-            True, self.image.segmented, "segmented should be true")
+            True, self.np_image.segmented, "segmented should be true")
 
     def test_threshold_image(self):
-        self.image.threshold_image()
+        self.np_image.threshold_image()
         original_image = color.rgb2gray(io.imread(_image_path))
         output = original_image > filters.threshold_mean(original_image)
 
-        assert_array_equal(self.image.image, output, "segmented image does not match")
+        assert_array_equal(self.np_image.np_image, output, "segmented image does not match")
 
     def test_apply_thinning(self):
         retina_image = retina.Retina(np.zeros((64, 64), np.uint8), _image_file_name)
-        retina_image.image[10:17, 10:13] = 1
+        retina_image.np_image[10:17, 10:13] = 1
         retina_image.apply_thinning()
         output = [0, 1, 1, 1, 1, 0]
-        assert_array_equal(retina_image.image[10:16, 11], output, "expected a line")
+        assert_array_equal(retina_image.np_image[10:16, 11], output, "expected a line")
 
     def test_save_image(self):
-        self.image.save_image(".")
+        self.np_image.save_image(".")
         self.assertTrue(os.path.isfile("./out_" + _image_file_name))
 
     def test_undo(self):
-        self.image.detect_edges_canny()
+        self.np_image.detect_edges_canny()
         original_image = retina.Retina(None, _image_path)
         self.assertRaises(
             AssertionError,
             assert_array_equal,
-            self.image.image, original_image.image, "images should be different")
-        self.image.undo()
-        assert_array_equal(self.image.image, original_image.image, "image should be the same")
+            self.np_image.np_image, original_image.np_image, "images should be different")
+        self.np_image.undo()
+        assert_array_equal(self.np_image.np_image, original_image.np_image, "image should be the same")
+
+    def test_erode(self):
+        self.np_image.threshold_image()
+        self.np_image.erode(1)
+        original_image = retina.Retina(None, _image_path)
+        original_image.threshold_image()
+        assert_array_equal(
+            self.np_image.np_image, ndimage.binary_erosion(original_image.np_image, iterations=1))
+
+    def test_dilate(self):
+        self.np_image.threshold_image()
+        self.np_image.dilate(1)
+        original_image = retina.Retina(None, _image_path)
+        original_image.threshold_image()
+        assert_array_equal(
+            self.np_image.np_image, ndimage.binary_dilation(original_image.np_image, iterations=1))
 
 
 class TestWindow(TestCase):
@@ -106,12 +123,12 @@ class TestWindow(TestCase):
         self.assertTrue(not windows, "windows should be empty")
 
         # test with a full data image
-        self._retina_image.image[:, :] = 1
+        self._retina_image.np_image[:, :] = 1
         windows = retina.create_windows(self._retina_image, 8)
         self.assertEqual(len(windows), self._image_size, "expected 64 windows")
 
         # test with an image half filled with data
-        self._retina_image.image[:, 0:int(self._image_size/2)] = 0
+        self._retina_image.np_image[:, 0:int(self._image_size/2)] = 0
         windows = retina.create_windows(self._retina_image, 8)
         self.assertEqual(len(windows), self._image_size/2, "expected 32 windows")
 
@@ -126,11 +143,11 @@ class TestWindow(TestCase):
         self.assertFalse(windows, "no window should be created")
 
     def test_vessel_extractor(self):
-        self._retina_image.image[10, 10:20] = 1
-        self._retina_image.image[11, 20] = 1
-        self._retina_image.image[9, 20] = 1
-        self._retina_image.image[11, 21] = 1
-        self._retina_image.image[9, 21] = 1
+        self._retina_image.np_image[10, 10:20] = 1
+        self._retina_image.np_image[11, 20] = 1
+        self._retina_image.np_image[9, 20] = 1
+        self._retina_image.np_image[11, 21] = 1
+        self._retina_image.np_image[9, 21] = 1
         vessels = retina.detect_vessel_border(self._retina_image)
 
         self.assertEqual(len(vessels), 1, "only one vessel should've been extracted")
@@ -138,7 +155,7 @@ class TestWindow(TestCase):
 
     def test_output_filename(self):
         window = retina.Window(self._retina_image, 0, 8, 0, 0)
-        window.image[:, :] = 1
+        window.np_image[:, :] = 1
         window.save_image("./")
         self.assertTrue(os.path.isfile(window._output_filename()), "file not found")
         os.unlink(window._output_filename())
