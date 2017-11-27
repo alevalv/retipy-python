@@ -119,6 +119,16 @@ class Retina(object):
         io.imshow(self.np_image)
         plt.show()
 
+    def compare_with(self, retinal_image):
+        """
+        Returns the difference between the given image and the stored one.
+
+        :param retinal_image: the image to compare with
+        :return:  a new Retina object with the differences
+        """
+        return Retina(self.np_image - retinal_image.np_image, "diff" + self._file_name)
+
+
 
 class Window(Retina):
     """a ROI (Region of Interest) that extends the Retina class"""

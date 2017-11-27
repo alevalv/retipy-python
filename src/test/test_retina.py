@@ -35,7 +35,7 @@ class TestRetina(TestCase):
     """Test class for Retina class"""
 
     def setUp(self):
-        self.np_image = retina.Retina(None, _image_path)
+        self.image = retina.Retina(None, _image_path)
 
     def tearDown(self):
         if os.path.isfile("./out_" + _image_file_name):
@@ -55,17 +55,17 @@ class TestRetina(TestCase):
     def test_segmented(self):
         """Test default value for segmented property"""
         self.assertEqual(
-            False, self.np_image.segmented, "segmented should be false by default")
-        self.np_image.segmented = True
+            False, self.image.segmented, "segmented should be false by default")
+        self.image.segmented = True
         self.assertEqual(
-            True, self.np_image.segmented, "segmented should be true")
+            True, self.image.segmented, "segmented should be true")
 
     def test_threshold_image(self):
-        self.np_image.threshold_image()
+        self.image.threshold_image()
         original_image = color.rgb2gray(io.imread(_image_path))
         output = original_image > filters.threshold_mean(original_image)
 
-        assert_array_equal(self.np_image.np_image, output, "segmented image does not match")
+        assert_array_equal(self.image.np_image, output, "segmented image does not match")
 
     def test_apply_thinning(self):
         retina_image = retina.Retina(np.zeros((64, 64), np.uint8), _image_file_name)
@@ -75,34 +75,42 @@ class TestRetina(TestCase):
         assert_array_equal(retina_image.np_image[10:16, 11], output, "expected a line")
 
     def test_save_image(self):
-        self.np_image.save_image(".")
+        self.image.save_image(".")
         self.assertTrue(os.path.isfile("./out_" + _image_file_name))
 
     def test_undo(self):
-        self.np_image.detect_edges_canny()
+        self.image.detect_edges_canny()
         original_image = retina.Retina(None, _image_path)
         self.assertRaises(
             AssertionError,
             assert_array_equal,
-            self.np_image.np_image, original_image.np_image, "images should be different")
-        self.np_image.undo()
-        assert_array_equal(self.np_image.np_image, original_image.np_image, "image should be the same")
+            self.image.np_image, original_image.np_image, "images should be different")
+        self.image.undo()
+        assert_array_equal(self.image.np_image, original_image.np_image, "image should be the same")
 
     def test_erode(self):
-        self.np_image.threshold_image()
-        self.np_image.erode(1)
+        self.image.threshold_image()
+        self.image.erode(1)
         original_image = retina.Retina(None, _image_path)
         original_image.threshold_image()
         assert_array_equal(
-            self.np_image.np_image, ndimage.binary_erosion(original_image.np_image, iterations=1))
+            self.image.np_image, ndimage.binary_erosion(original_image.np_image, iterations=1))
 
     def test_dilate(self):
-        self.np_image.threshold_image()
-        self.np_image.dilate(1)
+        self.image.threshold_image()
+        self.image.dilate(1)
         original_image = retina.Retina(None, _image_path)
         original_image.threshold_image()
         assert_array_equal(
-            self.np_image.np_image, ndimage.binary_dilation(original_image.np_image, iterations=1))
+            self.image.np_image, ndimage.binary_dilation(original_image.np_image, iterations=1))
+
+    def test_compare_with(self):
+        self.image.threshold_image()
+        original_image = retina.Retina(None, _image_path)
+        assert_array_equal(
+            self.image.compare_with(original_image).np_image,
+            self.image.np_image - original_image.np_image,
+            "image does not match")
 
 
 class TestWindow(TestCase):
