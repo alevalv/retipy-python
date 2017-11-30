@@ -32,6 +32,6 @@ setup(
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Programming Language :: Python :: 3.6'
     ],
-    packages=find_packages(exclude=["test"]),
+    packages=find_packages(exclude=["test", "util"]),
     install_requires=['matplotlib', 'numpy', 'pillow', 'scikit-image', 'scipy']
     )
