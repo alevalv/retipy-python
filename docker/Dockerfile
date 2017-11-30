@@ -36,6 +36,8 @@ RUN git clone git://github.com/alevalv/retipy.git /opt/retipy && \
     pip install -e /opt/retipy/src/ && \
     cp /opt/retipy/src/*.py /src && \
     cp -r /opt/retipy/src/resources /src && \
+    sed -i 's/\.\.\///' /src/resources/retipy.config && \
+    mkdir /src/build && \
     rm /src/setup.py
 
 WORKDIR /src
