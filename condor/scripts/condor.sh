@@ -23,6 +23,8 @@ cp src/*.py build
 cp -r src/retipy build
 cp -r src/lib build
 cd build
+revision=$(git rev-parse HEAD)
+sed -i "s/:latest/:$revision/" retipy.condor
 rm setup.py
 mv scripts/* .
 rm -r scripts
