@@ -21,7 +21,9 @@ RUN useradd -m -s /bin/zsh -N -u ${NB_UID} ${NB_USER} && \
     mkdir -p ${CONDA_DIR} && \
     chown ${NB_USER} ${CONDA_DIR} -R && \
     mkdir -p /src && \
-    chown ${NB_USER} /src -R
+    chown ${NB_USER} /src -R  && \
+    mkdir -p /opt/retipy && \
+    chown ${NB_USER} /opt/retipy -R
 
 USER retipy
 
@@ -30,10 +32,10 @@ ADD matplotlibrc /home/keras/.config/matplotlib/matplotlibrc
 RUN pip --no-cache-dir install --upgrade pip && \
     pip --no-cache-dir install setuptools numpy matplotlib pillow scikit-image scipy
 
-RUN git clone git://github.com/alevalv/retipy.git /src/retipy && \
-    pip install -e /src/retipy/src && \
-    cp /src/retipy/src/*.py /src && \
-    rm -rf /src/retipy && \
+RUN git clone git://github.com/alevalv/retipy.git /opt/retipy && \
+    pip install -e /opt/retipy/src/ && \
+    cp /opt/retipy/src/*.py /src && \
+    cp -r /opt/retipy/src/resources /src && \
     rm /src/setup.py
 
 WORKDIR /src

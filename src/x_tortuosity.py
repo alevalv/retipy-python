@@ -58,6 +58,7 @@ FILE_NAME = "{}-{:03d}-{:02d}-{:02d}-{:.2f}.txt".format(
     CONFIG.sampling_size,
     CONFIG.r_2_threshold)
 
+os.makedirs(os.path.dirname(CONFIG.output_folder), exist_ok=True)
 FILE = open(CONFIG.output_folder + '/' + FILE_NAME, 'w')
 
 for filename in sorted(glob.glob(os.path.join(CONFIG.image_directory, '*.png'))):
