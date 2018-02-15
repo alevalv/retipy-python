@@ -22,6 +22,7 @@ cp -r condor/* build
 cp src/*.py build
 cp -r src/retipy build
 cp -r src/lib build
+cp src/util/configurator.py build
 cd build
 revision=$(git rev-parse HEAD)
 sed -i "s/:latest/:$revision/" retipy.condor

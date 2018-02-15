@@ -16,7 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""configurator file creator script"""
+"""
+Helper script to create configuration files by specifying parameters
+Used by condor scripts to test a range of configurations easily.
+"""
 
 import argparse
 import configparser
