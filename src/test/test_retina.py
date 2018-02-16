@@ -112,6 +112,17 @@ class TestRetina(TestCase):
             self.image.np_image - original_image.np_image,
             "image does not match")
 
+    def test_reshape_image(self):
+        self.image.reshape_square()
+        self.assertEqual(self.image.shape[0], self.image.shape[1], "dimension should be the same when reshaping")
+
+    def test_get_window_sizes(self):
+        windows = self.image.get_window_sizes()
+        assert_array_equal(windows, [], "window array does not match")
+        self.image.reshape_square()
+        windows = self.image.get_window_sizes()
+        assert_array_equal(windows, [292,146,73], "window array does not match")
+
 
 class TestWindow(TestCase):
 

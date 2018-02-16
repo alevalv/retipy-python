@@ -18,6 +18,7 @@
 
 from os import path
 from copy import copy
+import numpy as np
 import warnings
 
 from scipy import ndimage
@@ -44,10 +45,9 @@ class Retina(object):
             self._file_name = image_path
 
         self.segmented = False
-        self.size_x = self.np_image.shape[0]
-        self.size_y = self.np_image.shape[1]
         self.old_image = None
         self.np_image = color.rgb2gray(self.np_image)
+        self.shape = self.np_image.shape
         self.depth = 1
 
 ##################################################################################################
@@ -87,6 +87,35 @@ class Retina(object):
         """
         self._copy()
         self.np_image = ndimage.binary_dilation(self.np_image, iterations=times)
+
+    def reshape_square(self):
+        """
+        This function will normalise the image size, making a square with it and rounding the pixels:
+        If the given image is 571 560, the new size will be 572 572, with zeroes in all new pixels.
+        """
+        max_value = self.shape[0] if self.shape[0] > self.shape[1] else self.shape[1]
+        max_value = max_value + (max_value % 2)
+        self.np_image = np.pad(
+            self.np_image,
+            ((0, max_value - self.shape[0]), (0, max_value - self.shape[1])),
+            'constant',
+            constant_values=(0, 0))
+        self.shape = self.np_image.shape
+
+    def get_window_sizes(self):
+        """
+        Returns an array with the possible window size that this image can be divided by without leaving empty space.
+        584x584 would return [292,146,73]
+        This is only available for square images (you can use reshape_square() before calling this method)
+        :return: a list of possible window sizes.
+        """
+        sizes = []
+        if self.shape[0] == self.shape[1]:
+            current_value = self.shape[0]
+            while current_value % 2 == 0:
+                current_value = int(current_value / 2)
+                sizes.append(current_value)
+        return sizes
 
 ##################################################################################################
 # I/O functions
@@ -129,7 +158,6 @@ class Retina(object):
         return Retina(self.np_image - retinal_image.np_image, "diff" + self._file_name)
 
 
-
 class Window(Retina):
     """a ROI (Region of Interest) that extends the Retina class"""
     def __init__(self, image, window_id, dimension, start_x, start_y):
@@ -157,8 +185,8 @@ def create_windows(image, dimension, method="separated", min_pixels=10):
     window_id = 0
 
     if method == "separated":
-        for x in range(0, image.size_x, dimension):
-            for y in range(0, image.size_y, dimension):
+        for x in range(0, image.shape[0], dimension):
+            for y in range(0, image.shape[1], dimension):
                 current_window = Window(image, window_id, dimension, x, y)
                 pixel_values = current_window.np_image.sum()
                 if pixel_values > min_pixels:
@@ -166,8 +194,8 @@ def create_windows(image, dimension, method="separated", min_pixels=10):
                     window_id += 1
     elif method == "combined":
         new_dimension = round(dimension/2)
-        for x in range(0, image.size_x - new_dimension, new_dimension):
-            for y in range(0, image.size_y - new_dimension, new_dimension):
+        for x in range(0, image.shape[0] - new_dimension, new_dimension):
+            for y in range(0, image.shape[1] - new_dimension, new_dimension):
                 current_window = Window(image, window_id, dimension, x, y)
                 pixel_values = current_window.np_image.sum()
                 if pixel_values > min_pixels:
@@ -200,8 +228,8 @@ def detect_vessel_border(image, ignored_pixels=1):
         """
         x_less = max(0, pixel[0] - 1)
         y_less = max(0, pixel[1] - 1)
-        x_more = min(window.size_x - 1, pixel[0] + 1)
-        y_more = min(window.size_y - 1, pixel[1] + 1)
+        x_more = min(window.shape[0] - 1, pixel[0] + 1)
+        y_more = min(window.shape[1] - 1, pixel[1] + 1)
 
         active_neighbours = []
 
@@ -251,8 +279,8 @@ def detect_vessel_border(image, ignored_pixels=1):
         return [vessel_x, vessel_y]
 
     vessels = []
-    for it_x in range(ignored_pixels, image.size_x - ignored_pixels):
-        for it_y in range(ignored_pixels, image.size_y - ignored_pixels):
+    for it_x in range(ignored_pixels, image.shape[0] - ignored_pixels):
+        for it_y in range(ignored_pixels, image.shape[1] - ignored_pixels):
             if image.np_image[it_x, it_y] > 0:
                 vessel = vessel_extractor(image, it_x, it_y)
                 vessels.append(vessel)
