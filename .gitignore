@@ -7,3 +7,5 @@ dist/
 .coverage
 .directory
 **/.ropeproject
+**/.pytest_cache
+

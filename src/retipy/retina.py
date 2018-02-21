@@ -113,7 +113,7 @@ class Retina(object):
         if self.shape[0] == self.shape[1]:
             current_value = self.shape[0]
             while current_value % 2 == 0:
-                current_value = int(current_value / 2)
+                current_value = current_value // 2
                 sizes.append(current_value)
         return sizes
 
@@ -159,51 +159,83 @@ class Retina(object):
 
 
 class Window(Retina):
-    """a ROI (Region of Interest) that extends the Retina class"""
-    def __init__(self, image, window_id, dimension, start_x, start_y):
+    """
+    a ROI (Region of Interest) that extends the Retina class
+    TODO: Add support for more than depth=1 images (only if needed)
+    """
+    def __init__(self, image, dimension, method="separated", min_pixels=10):
         super(Window, self).__init__(
-            image.np_image[start_x:(start_x + dimension), start_y:(start_y + dimension)],
+            image.np_image,
             image.filename())
-        self.window_id = window_id
-        self._x = start_x
-        self._y = start_y
+        self.windows = Window.create_windows(image, dimension, method, min_pixels)
 
-    def _output_filename(self):
-        return "out_w" + str(self.window_id) + "_" + self._file_name
+    def _window_filename(self, window_id):
+        return "out_w" + str(window_id) + "_" + self._file_name
 
+    def save_window(self, window_id, output_folder):
+        """
+        Saves the specified window in the given output folder, the name will be out_<original_image_name>
+        :param window_id: the window_id to save
+        :param output_folder: destination folder
+        """
+        if window_id >= self.windows.shape[0]:
+            raise ValueError("Window value '{}' is more than allowed ({})".format(window_id, self.windows.shape[0]))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            io.imsave(output_folder + self._window_filename(window_id), self.windows[window_id, 0])
 
-def create_windows(image, dimension, method="separated", min_pixels=10):
-    """
-    Creates multiple square windows of the given dimension for the current retinal image.
-    Empty windows (i.e. only background) will be ignored
+    @staticmethod
+    def create_windows(image, dimension, method="separated", min_pixels=10):
+        """
+        Creates multiple square windows of the given dimension for the current retinal image.
+        Empty windows (i.e. only background) will be ignored
 
-    Separated method will create windows of the given dimension size, that does not share any
-    pixel, combined will make windows advancing half of the dimension, sharing some pixels
-    between adjacent windows.
-    """
-    windows = []
-    window_id = 0
+        Separated method will create windows of the given dimension size, that does not share any
+        pixel, combined will make windows advancing half of the dimension, sharing some pixels
+        between adjacent windows.
+        :param image: an instance of Retina, to be divided in windows
+        :param dimension:  window size (square of [dimension, dimension] size)
+        :param method: method of separation (separated or combined)
+        :param min_pixels: ignore windows with less than min_pixels with value. Set to zero to add all windows
+        :return: a numpy array with the structure [window, depth, height, width]
+        """
+        if image.shape[0] != image.shape[1] or image.shape[0] % dimension != 0:
+            raise ValueError(
+                "image shape is not the same or the dimension value does not divide the image completely: "
+                + "sx:{} sy:{} dim:{}".format(image.shape[0], image.shape[1], dimension))
 
-    if method == "separated":
-        for x in range(0, image.shape[0], dimension):
-            for y in range(0, image.shape[1], dimension):
-                current_window = Window(image, window_id, dimension, x, y)
-                pixel_values = current_window.np_image.sum()
-                if pixel_values > min_pixels:
-                    windows.append(current_window)
-                    window_id += 1
-    elif method == "combined":
-        new_dimension = round(dimension/2)
-        for x in range(0, image.shape[0] - new_dimension, new_dimension):
-            for y in range(0, image.shape[1] - new_dimension, new_dimension):
-                current_window = Window(image, window_id, dimension, x, y)
-                pixel_values = current_window.np_image.sum()
-                if pixel_values > min_pixels:
-                    windows.append(current_window)
-                    window_id += 1
+        #                      window_count
+        windows = []
+        window_id = 0
+        if method == "separated":
+            windows = np.empty([(image.shape[0] // dimension) ** 2, image.depth, dimension, dimension])
+            for x in range(0, image.shape[0], dimension):
+                for y in range(0, image.shape[1], dimension):
+                    t_window = image.np_image[x:(x + dimension), y:(y + dimension)]
+                    if t_window.sum() >= min_pixels:
+                        windows[window_id, 0] = t_window
+                        window_id += 1
+        elif method == "combined":
+            new_dimension = dimension // 2
+            windows = np.empty([(image.shape[0] // new_dimension) ** 2, image.depth, dimension, dimension])
+            if image.shape[0] % new_dimension != 0:
+                raise ValueError(
+                    "Dimension value '{}' is not valid, choose a value that its half value can split the image evenly"
+                    .format(dimension))
+            for x in range(0, image.shape[0] - new_dimension, new_dimension):
+                for y in range(0, image.shape[1] - new_dimension, new_dimension):
+                    t_window = image.np_image[x:(x + dimension), y:(y + dimension)]
+                    if t_window.sum() >= min_pixels:
+                        windows[window_id, 0] = image.np_image[x:(x + dimension), y:(y + dimension)]
+                        window_id += 1
+        if window_id <= windows.shape[0]:
+            if window_id == 0:
+                windows = []
+            else:
+                windows.resize([window_id, windows.shape[1], windows.shape[2], windows.shape[3]])
 
-    #  print('created ' + str(window_id) + " windows")
-    return windows
+        #  print('created ' + str(window_id) + " windows")
+        return windows
 
 
 def detect_vessel_border(image, ignored_pixels=1):

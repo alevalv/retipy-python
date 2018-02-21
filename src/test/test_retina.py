@@ -132,34 +132,29 @@ class TestWindow(TestCase):
         self._retina_image = retina.Retina(
             np.zeros((self._image_size, self._image_size), np.uint8), _image_file_name)
 
-    def test_constructor(self):
-        """test the Window constructor in a positive scenario"""
-        retina.Window(self._retina_image, 0, 8, 0, 0)
-
     def test_create_windows(self):
         # test with an empty image
-        windows = retina.create_windows(self._retina_image, 8)
-        self.assertTrue(not windows, "windows should be empty")
+        self.assertFalse(retina.Window(self._retina_image, 8).windows, "windows should be empty")
 
         # test with a full data image
         self._retina_image.np_image[:, :] = 1
-        windows = retina.create_windows(self._retina_image, 8)
-        self.assertEqual(len(windows), self._image_size, "expected 64 windows")
+        windows = retina.Window(self._retina_image, 8)
+        self.assertEqual(windows.windows.shape[0], self._image_size, "expected 64 windows")
 
         # test with an image half filled with data
         self._retina_image.np_image[:, 0:int(self._image_size/2)] = 0
-        windows = retina.create_windows(self._retina_image, 8)
-        self.assertEqual(len(windows), self._image_size/2, "expected 32 windows")
+        windows = retina.Window(self._retina_image, 8)
+        self.assertEqual(windows.windows.shape[0], self._image_size/2, "expected 32 windows")
 
     def test_create_windows_combined(self):
-        windows = retina.create_windows(self._retina_image, 8, "combined", -1)
+        windows = retina.Window(self._retina_image, 8, "combined", 0)
 
         # combined should create (width/(dimension/2) - 1) * (height/(dimension/2) -1)
         # here is (64/4 -1) * (64/4 -1) = 225
-        self.assertEqual(len(windows), 225, "there should be 225 windows created")
+        self.assertEqual(windows.windows.shape[0], 225, "there should be 225 windows created")
 
-        windows = retina.create_windows(self._retina_image, 8, "combined")
-        self.assertFalse(windows, "no window should be created")
+        windows = retina.Window(self._retina_image, 8, "combined")
+        self.assertFalse(windows.windows, "no window should be created")
 
     def test_vessel_extractor(self):
         self._retina_image.np_image[10, 10:20] = 1
@@ -173,8 +168,8 @@ class TestWindow(TestCase):
         self.assertEqual(len(vessels[0][0]), 14, "vessel should have 14 pixels")
 
     def test_output_filename(self):
-        window = retina.Window(self._retina_image, 0, 8, 0, 0)
-        window.np_image[:, :] = 1
-        window.save_image("./")
-        self.assertTrue(os.path.isfile(window._output_filename()), "file not found")
-        os.unlink(window._output_filename())
+        self._retina_image.np_image[:, :] = 1
+        window = retina.Window(self._retina_image, 8, min_pixels=0)
+        window.save_window(1, "./")
+        self.assertTrue(os.path.isfile(window._window_filename(1)), "file not found")
+        os.unlink(window._window_filename(1))

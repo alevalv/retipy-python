@@ -83,3 +83,9 @@ class TestTortuosity(TestCase):
 
     def test_fractal_tortuosity(self):
         print(tortuosity.fractal_tortuosity(retina.Retina(None, "src/resources/images/img1.png")))
+
+    def test_smooth_tortuosity_points(self):
+        tortuosity.smooth_tortuosity_points([4, 7, 9, 5, 9, 11, 15, 11], 7)
+
+    def test_smooth_tortuosity(self):
+        self.assertEqual(tortuosity.smooth_tortuosity_cubic(range(0, 11, 1), [0, 1, 2, 3, 4, 5, 4, 3, 2, 1, 0]), 0)

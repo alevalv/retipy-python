@@ -19,8 +19,8 @@
 import cmath
 import numpy as np
 
-from lib import fractal_dimension
-
+from lib import fractal_dimension, smoothing
+from scipy.interpolate import CubicSpline
 
 class TortuosityException(Exception):
     """Basic exception to showcase errors of the tortuosity module"""
@@ -66,7 +66,14 @@ def _chord_length(x, y):
 
 
 def _detect_inflection_points(x, y):
-    df = np.diff(y)
+    """
+    This method detects the inflection points of a given curve y=f(x) by applying a convolution to
+    the y values and checking for changes in the sign of this convolution, each sign change is
+    interpreted as an inflection point
+    :param x: the x values of the curve
+    :param y: the y values of the curve
+    :return: the x values of the inflection points.
+    """
     cf = np.convolve(y, [1, -1])
     inflection_points = []
     for iterator in range(1, len(x)):
@@ -162,3 +169,28 @@ def distance_inflection_count_tortuosity(x, y):
 
 def fractal_tortuosity(retinal_image):
     return fractal_dimension.fractal_dimension(retinal_image.np_image)
+
+
+def smooth_tortuosity_points(curve, scale_space):
+    """
+    Calculates the tortuosity of a given curve, by applying a gaussian filter multiple times
+    and validating differences between the applications.
+    This approach needs more research, the smoothing algorithm is unreliable.
+
+    :param curve: a list of points
+    :return: a value representing the tortuosity estimation of the curve
+    """
+    scale_space = max(scale_space + scale_space % 2 - 1, 1)
+    smoothing.smooth(curve, scale_space)
+
+
+def smooth_tortuosity_cubic(x, y):
+    """
+    TODO
+    :param x: the list of x points of the curve
+    :param y: the list of y points of the curve
+
+    :return:
+    """
+    spline = CubicSpline(x, y)
+    return spline(x[0])
