@@ -146,6 +146,9 @@ class TestWindow(TestCase):
         windows = retina.Window(self._retina_image, 8)
         self.assertEqual(windows.windows.shape[0], self._image_size/2, "expected 32 windows")
 
+    def test_create_windows_error_dimension(self):
+        self.assertRaises(ValueError, retina.Window, self._retina_image, 7)
+
     def test_create_windows_combined(self):
         windows = retina.Window(self._retina_image, 8, "combined", 0)
 
@@ -155,6 +158,10 @@ class TestWindow(TestCase):
 
         windows = retina.Window(self._retina_image, 8, "combined")
         self.assertFalse(windows.windows, "no window should be created")
+
+    def test_create_windows_combined_error_dimension(self):
+        new_image = retina.Retina(np.zeros((66, 66), np.uint8), _image_file_name)
+        self.assertRaises(ValueError, retina.Window, new_image, 33, "combined", 0)
 
     def test_vessel_extractor(self):
         self._retina_image.np_image[10, 10:20] = 1
@@ -173,3 +180,13 @@ class TestWindow(TestCase):
         window.save_window(1, "./")
         self.assertTrue(os.path.isfile(window._window_filename(1)), "file not found")
         os.unlink(window._window_filename(1))
+
+    def test_switch_mode(self):
+        window = retina.Window(self._retina_image, 8, min_pixels=0)
+        assert_array_equal(window.shape, [64, 1, 8, 8], "window shape is incorrect")
+
+        window.switch_mode(window.mode_tensorflow)
+        assert_array_equal(window.shape, [64, 8, 8, 1], "window shape is incorrect")
+
+        window.switch_mode(window.mode_pytorch)
+        assert_array_equal(window.shape, [64, 1, 8, 8], "window shape is incorrect")

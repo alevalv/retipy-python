@@ -163,11 +163,43 @@ class Window(Retina):
     a ROI (Region of Interest) that extends the Retina class
     TODO: Add support for more than depth=1 images (only if needed)
     """
+    @property
+    def mode_pytorch(self):
+        return "PYT"
+
+    @property
+    def mode_tensorflow(self):
+        return "TF"
+
     def __init__(self, image, dimension, method="separated", min_pixels=10):
         super(Window, self).__init__(
             image.np_image,
             image.filename())
         self.windows = Window.create_windows(image, dimension, method, min_pixels)
+        if self.windows == []:
+            self.shape = []
+            self.mode = "empty"
+        else:
+            self.shape = self.windows.shape
+            self.mode = self.mode_pytorch
+
+    def switch_mode(self, mode):
+        """
+        Changes the internal window ordering depending on the given mode.
+        Tensorflow style is [batch, width, height, depth]
+        Pytorch style is [batch, depth, width, height]
+        :param mode: new mode to change, can be self.tensorflow or self.pytorch
+        """
+        if mode == self.mode_pytorch and self.mode == self.mode_tensorflow:
+            twin = np.swapaxes(self.windows, 2, 3)
+            self.windows = np.swapaxes(twin, 1, 2)
+            self.shape = self.windows.shape
+            self.mode = self.mode_pytorch
+        elif mode == self.mode_tensorflow and self.mode == self.mode_pytorch:
+            twin = np.swapaxes(self.windows, 1, 2)
+            self.windows = np.swapaxes(twin, 2, 3)
+            self.shape = self.windows.shape
+            self.mode = self.mode_tensorflow
 
     def _window_filename(self, window_id):
         return "out_w" + str(window_id) + "_" + self._file_name
