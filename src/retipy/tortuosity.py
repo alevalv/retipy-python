@@ -165,7 +165,7 @@ def distance_inflection_count_tortuosity(x, y):
 def fractal_tortuosity(retinal_image: Retina):
     fd = fractal_dimension.fractal_dimension(retinal_image.np_image)
     if cmath.isnan(fd):
-        return 1
+        return 0.5
     else:
         return fd
 
@@ -195,7 +195,7 @@ def smooth_tortuosity_cubic(x, y):
     return spline(x[0])
 
 
-def evaluate_window(window: Window, min_pixels_per_vessel=6, sampling_size=6, r2_threshold=0.80):
+def evaluate_window(window: Window, min_pixels_per_vessel=6, sampling_size=6, r2_threshold=0.80):  # pragma: no cover
     """
     Evaluates a Window object and sets the tortuosity values in the tag parameter.
     :param window: The window object to be evaluated

@@ -174,12 +174,17 @@ class TestWindow(TestCase):
         self.assertEqual(len(vessels), 1, "only one vessel should've been extracted")
         self.assertEqual(len(vessels[0][0]), 14, "vessel should have 14 pixels")
 
-    def test_output_filename(self):
+    def test_save_window(self):
         self._retina_image.np_image[:, :] = 1
         window = retina.Window(self._retina_image, 8, min_pixels=0)
         window.save_window(1, "./")
         self.assertTrue(os.path.isfile(window._window_filename(1)), "file not found")
         os.unlink(window._window_filename(1))
+
+    def test_save_window_wrong_id(self):
+        self._retina_image.np_image[:, :] = 1
+        window = retina.Window(self._retina_image, 8, min_pixels=0)
+        self.assertRaises(ValueError, window.save_window, 80, "./")
 
     def test_switch_mode(self):
         window = retina.Window(self._retina_image, 8, min_pixels=0)
@@ -190,3 +195,15 @@ class TestWindow(TestCase):
 
         window.switch_mode(window.mode_pytorch)
         assert_array_equal(window.shape, [64, 1, 8, 8], "window shape is incorrect")
+
+    def test_tags(self):
+        window = retina.Window(self._retina_image, 8, min_pixels=0)
+        tags = np.zeros([window.shape[0], 4])
+        window.tags = tags
+        assert_array_equal(tags, window.tags, "tags does not match")
+
+    def test_tags_wrong_input(self):
+        window = retina.Window(self._retina_image, 8, min_pixels=0)
+        with self.assertRaises(ValueError):
+            tags = np.zeros([1, 4])
+            window.tags = tags
