@@ -130,12 +130,13 @@ class Retina(object):
         """
         self.np_image = self.old_image
 
+    @property
     def filename(self):
         """Returns the filename of the retina image."""
         return self._file_name
 
     def _output_filename(self):
-        return "/out_" + self._file_name
+        return "/out_" + self.filename
 
     def save_image(self, output_folder):
         """Saves the image in the given output folder, the name will be out_<original_image_name>"""
@@ -155,7 +156,7 @@ class Retina(object):
         :param retinal_image: the image to compare with
         :return:  a new Retina object with the differences
         """
-        return Retina(self.np_image - retinal_image.np_image, "diff" + self._file_name)
+        return Retina(self.np_image - retinal_image.np_image, "diff" + self.filename)
 
 
 class Window(Retina):
@@ -163,6 +164,19 @@ class Window(Retina):
     a ROI (Region of Interest) that extends the Retina class
     TODO: Add support for more than depth=1 images (only if needed)
     """
+    def __init__(self, image: Retina, dimension, method="separated", min_pixels=10):
+        super(Window, self).__init__(
+            image.np_image,
+            image.filename)
+        self.windows = Window.create_windows(image, dimension, method, min_pixels)
+        if self.windows == []:
+            self.shape = []
+            self.mode = "empty"
+        else:
+            self.shape = self.windows.shape
+            self.mode = self.mode_pytorch
+        self._tags = []
+
     @property
     def mode_pytorch(self):
         return "PYT"
@@ -171,17 +185,15 @@ class Window(Retina):
     def mode_tensorflow(self):
         return "TF"
 
-    def __init__(self, image, dimension, method="separated", min_pixels=10):
-        super(Window, self).__init__(
-            image.np_image,
-            image.filename())
-        self.windows = Window.create_windows(image, dimension, method, min_pixels)
-        if self.windows == []:
-            self.shape = []
-            self.mode = "empty"
-        else:
-            self.shape = self.windows.shape
-            self.mode = self.mode_pytorch
+    @property
+    def tags(self):
+        return self._tags
+
+    @tags.setter
+    def tags(self, value):
+        self._tags = value
+        if value.shape[0] != self.shape[0]:
+            raise ValueError("Wrong set of tags, expected {} got {}".format(self.shape[0], value.shape[0]))
 
     def switch_mode(self, mode):
         """
@@ -202,7 +214,7 @@ class Window(Retina):
             self.mode = self.mode_tensorflow
 
     def _window_filename(self, window_id):
-        return "out_w" + str(window_id) + "_" + self._file_name
+        return "out_w" + str(window_id) + "_" + self.filename
 
     def save_window(self, window_id, output_folder):
         """
@@ -217,7 +229,7 @@ class Window(Retina):
             io.imsave(output_folder + self._window_filename(window_id), self.windows[window_id, 0])
 
     @staticmethod
-    def create_windows(image, dimension, method="separated", min_pixels=10):
+    def create_windows(image: Retina, dimension, method="separated", min_pixels=10):
         """
         Creates multiple square windows of the given dimension for the current retinal image.
         Empty windows (i.e. only background) will be ignored
@@ -270,7 +282,7 @@ class Window(Retina):
         return windows
 
 
-def detect_vessel_border(image, ignored_pixels=1):
+def detect_vessel_border(image: Retina, ignored_pixels=1):
     """
     Extracts the vessel border of the given image, this method will try to extract all vessel
     borders that does not overlap.

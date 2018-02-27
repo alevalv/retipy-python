@@ -35,10 +35,7 @@ class TestTortuosity(TestCase):
 
     def test_linear_regression_tortuosity_error_size(self):
         self.assertRaises(
-            tortuosity.TortuosityException,
-            tortuosity.linear_regression_tortuosity,
-            [1],
-            [1])
+            ValueError, tortuosity.linear_regression_tortuosity, [1], [1])
 
     def test_linear_regression_tortuosity_no_second_try(self):
         self.assertEqual(
@@ -67,7 +64,7 @@ class TestTortuosity(TestCase):
 
     def test_distance_measure_tortuosity_error(self):
         self.assertRaises(
-            tortuosity.TortuosityException, tortuosity.distance_measure_tortuosity, [1], [2])
+            ValueError, tortuosity.distance_measure_tortuosity, [1], [2])
 
     def test_detect_inflection_points(self):
         assert_array_equal(

@@ -20,13 +20,8 @@ import cmath
 import numpy as np
 
 from lib import fractal_dimension, smoothing
+from retipy.retina import Retina, Window, detect_vessel_border
 from scipy.interpolate import CubicSpline
-
-class TortuosityException(Exception):
-    """Basic exception to showcase errors of the tortuosity module"""
-    def __init__(self, message):
-        super(TortuosityException, self).__init__(message)
-        self.message = message
 
 
 def _distance_2p(x1, y1, x2, y2):
@@ -38,7 +33,7 @@ def _distance_2p(x1, y1, x2, y2):
     :param y2: ending y value
     :return: the distance between [x1, y1] -> [x2, y2]
     """
-    return cmath.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+    return ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
 
 
 def _curve_length(x, y):
@@ -98,7 +93,7 @@ def linear_regression_tortuosity(x, y, sampling_size=6, retry=True):
     :param retry: if regression fails due to a zero division, try again by inverting x and y
     """
     if len(x) < 4:
-        raise TortuosityException("Given curve must have more than 4 elements")
+        raise ValueError("Given curve must have more than 4 elements")
     try:
         min_point_x = x[0]
         min_point_y = y[0]
@@ -150,7 +145,7 @@ def distance_measure_tortuosity(x, y):
     :return: the arc-chord tortuosity measure
     """
     if len(x) < 2:
-        raise TortuosityException("Given curve must have at least 2 elements")
+        raise ValueError("Given curve must have at least 2 elements")
 
     return _curve_length(x, y) / _chord_length(x, y)
 
@@ -167,8 +162,12 @@ def distance_inflection_count_tortuosity(x, y):
     return distance_measure_tortuosity(x, y) * (len(_detect_inflection_points(x, y)) + 1)
 
 
-def fractal_tortuosity(retinal_image):
-    return fractal_dimension.fractal_dimension(retinal_image.np_image)
+def fractal_tortuosity(retinal_image: Retina):
+    fd = fractal_dimension.fractal_dimension(retinal_image.np_image)
+    if cmath.isnan(fd):
+        return 1
+    else:
+        return fd
 
 
 def smooth_tortuosity_points(curve, scale_space):
@@ -194,3 +193,38 @@ def smooth_tortuosity_cubic(x, y):
     """
     spline = CubicSpline(x, y)
     return spline(x[0])
+
+
+def evaluate_window(window: Window, min_pixels_per_vessel=6, sampling_size=6, r2_threshold=0.80):
+    """
+    Evaluates a Window object and sets the tortuosity values in the tag parameter.
+    :param window: The window object to be evaluated
+    :param min_pixels_per_vessel:
+    :param sampling_size:
+    :param r2_threshold:
+    :return:
+    """
+    tags = np.empty([window.shape[0], 4])
+    window.switch_mode(window.mode_pytorch)
+    for i in range(0, window.shape[0], 1):
+        bw_window = window.windows[i, 0, :, :]
+        retina = Retina(bw_window, "window{}" + window.filename)
+        retina.threshold_image()
+        retina.apply_thinning()
+        vessels = detect_vessel_border(retina)
+        vessel_count = 0
+        t1, t2, t3, t4 = 0, 0, 0, 0
+        for vessel in vessels:
+            if len(vessel[0]) > min_pixels_per_vessel:
+                vessel_count += 1
+                if linear_regression_tortuosity(vessel[0], vessel[1], sampling_size) > r2_threshold:
+                    t1 += 1
+                t2 += distance_measure_tortuosity(vessel[0], vessel[1])
+                t3 += distance_inflection_count_tortuosity(vessel[0], vessel[1])
+        if vessel_count > 0:
+            t1 = t1/vessel_count
+            t2 = t2/vessel_count
+            t3 = t3/vessel_count
+        t4 = fractal_tortuosity(retina)
+        tags[i] = t1, t2, t3, t4
+    window.tags = tags
