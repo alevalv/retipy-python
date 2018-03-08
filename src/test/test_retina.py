@@ -124,6 +124,11 @@ class TestRetina(TestCase):
         assert_array_equal(windows, [292,146,73], "window array does not match")
 
 
+class TestRetinaRGB(TestRetina):
+    def setUp(self):
+        self.image = retina.Retina(None, _image_path, False)
+
+
 class TestWindow(TestCase):
 
     _image_size = 64
@@ -134,7 +139,7 @@ class TestWindow(TestCase):
 
     def test_create_windows(self):
         # test with an empty image
-        self.assertFalse(retina.Window(self._retina_image, 8).windows, "windows should be empty")
+        self.assertRaises(ValueError, retina.Window, self._retina_image, 8)
 
         # test with a full data image
         self._retina_image.np_image[:, :] = 1
@@ -156,8 +161,8 @@ class TestWindow(TestCase):
         # here is (64/4 -1) * (64/4 -1) = 225
         self.assertEqual(windows.windows.shape[0], 225, "there should be 225 windows created")
 
-        windows = retina.Window(self._retina_image, 8, "combined")
-        self.assertFalse(windows.windows, "no window should be created")
+        # fail with no window created
+        self.assertRaises(ValueError, retina.Window, self._retina_image, 8, "combined")
 
     def test_create_windows_combined_error_dimension(self):
         new_image = retina.Retina(np.zeros((66, 66), np.uint8), _image_file_name)

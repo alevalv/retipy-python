@@ -20,6 +20,7 @@ import cmath
 import numpy as np
 
 from lib import fractal_dimension, smoothing
+from retipy import math as m
 from retipy.retina import Retina, Window, detect_vessel_border
 from scipy.interpolate import CubicSpline
 
@@ -64,16 +65,17 @@ def _detect_inflection_points(x, y):
     """
     This method detects the inflection points of a given curve y=f(x) by applying a convolution to
     the y values and checking for changes in the sign of this convolution, each sign change is
-    interpreted as an inflection point
+    interpreted as an inflection point.
+    It will ignore the first and last 2 pixels.
     :param x: the x values of the curve
     :param y: the y values of the curve
-    :return: the x values of the inflection points.
+    :return: the array position in x of the inflection points.
     """
     cf = np.convolve(y, [1, -1])
     inflection_points = []
-    for iterator in range(1, len(x)):
+    for iterator in range(2, len(x)-2):
         if np.sign(cf[iterator]) != np.sign(cf[iterator - 1]):
-            inflection_points.append(x[iterator - 1])
+            inflection_points.append(iterator)
     return inflection_points
 
 
@@ -163,24 +165,57 @@ def distance_inflection_count_tortuosity(x, y):
 
 
 def fractal_tortuosity(retinal_image: Retina):
-    fd = fractal_dimension.fractal_dimension(retinal_image.np_image)
-    if cmath.isnan(fd):
-        return 0.5
-    else:
-        return fd
-
-
-def smooth_tortuosity_points(curve, scale_space):
     """
-    Calculates the tortuosity of a given curve, by applying a gaussian filter multiple times
-    and validating differences between the applications.
-    This approach needs more research, the smoothing algorithm is unreliable.
-
-    :param curve: a list of points
-    :return: a value representing the tortuosity estimation of the curve
+    Calculates the fractal dimension of the given image.
+    The method used is the Minkowski-Bouligand dimension defined in
+    https://en.wikipedia.org/wiki/Minkowski–Bouligand_dimension
+    :param retinal_image:  a retinal image.
+    :return: the fractal dimension of the given image
     """
-    scale_space = max(scale_space + scale_space % 2 - 1, 1)
-    smoothing.smooth(curve, scale_space)
+    return fractal_dimension.fractal_dimension(retinal_image.np_image)
+
+
+def tortuosity_density(x, y):
+    """
+    Defined in "A Novel Method for the Automatic Grading of Retinal Vessel Tortuosity" by Grisan et al.
+    DOI: 10.1109/IEMBS.2003.1279902
+
+    :param x: the x points of the curve
+    :param y: the y points of the curve
+    :return: tortuosity density measure
+    """
+    inflection_points = _detect_inflection_points(x, y)
+    n = len(inflection_points)
+    if not n:
+        return 0
+    starting_position = 0
+    sum_segments = 0
+    # we process the curve dividing it on its inflection points
+    for in_point in inflection_points:
+        segment_x = x[starting_position:in_point]
+        segment_y = y[starting_position:in_point]
+        sum_segments += _curve_length(segment_x, segment_y) / _chord_length(segment_x, segment_y) - 1
+
+    return (n - 1)/n + (1/_curve_length(x, y))*sum_segments
+
+
+def squared_curvature_tortuosity(x, y):
+    """
+    See Measurement and classification of retinal vascular tortuosity by Hart et al.
+    DOI: 10.1016/S1386-5056(98)00163-4
+    :param x: the x values of the curve
+    :param y: the y values of the curve
+    :return: the squared curvature tortuosity of the given curve
+    """
+    curvatures = []
+    x_values = range(1, len(x)-1)
+    for i in x_values:
+        x_1 = m.derivative1_centered_h1(i, x)
+        x_2 = m.derivative2_centered_h1(i, x)
+        y_1 = m.derivative1_centered_h1(i, y)
+        y_2 = m.derivative2_centered_h1(i, y)
+        curvatures.append((x_1*y_2 - x_2*y_1)/(y_1**2 + x_1**2)**1.5)
+    return np.trapz(curvatures, x_values)
 
 
 def smooth_tortuosity_cubic(x, y):
@@ -204,8 +239,10 @@ def evaluate_window(window: Window, min_pixels_per_vessel=6, sampling_size=6, r2
     :param r2_threshold:
     :return:
     """
-    tags = np.empty([window.shape[0], 4])
+    tags = np.empty([window.shape[0], 5])
+    # preemptively switch to pytorch.
     window.switch_mode(window.mode_pytorch)
+    t4 = fractal_tortuosity(window)
     for i in range(0, window.shape[0], 1):
         bw_window = window.windows[i, 0, :, :]
         retina = Retina(bw_window, "window{}" + window.filename)
@@ -213,7 +250,7 @@ def evaluate_window(window: Window, min_pixels_per_vessel=6, sampling_size=6, r2
         retina.apply_thinning()
         vessels = detect_vessel_border(retina)
         vessel_count = 0
-        t1, t2, t3, t4 = 0, 0, 0, 0
+        t1, t2, t3, td = 0, 0, 0, 0
         for vessel in vessels:
             if len(vessel[0]) > min_pixels_per_vessel:
                 vessel_count += 1
@@ -221,10 +258,11 @@ def evaluate_window(window: Window, min_pixels_per_vessel=6, sampling_size=6, r2
                     t1 += 1
                 t2 += distance_measure_tortuosity(vessel[0], vessel[1])
                 t3 += distance_inflection_count_tortuosity(vessel[0], vessel[1])
+                td += tortuosity_density(vessel[0], vessel[1])
         if vessel_count > 0:
             t1 = t1/vessel_count
             t2 = t2/vessel_count
             t3 = t3/vessel_count
-        t4 = fractal_tortuosity(retina)
-        tags[i] = t1, t2, t3, t4
+            td = td/vessel_count
+        tags[i] = t1, t2, t3, t4, td
     window.tags = tags

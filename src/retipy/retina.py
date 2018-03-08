@@ -34,8 +34,9 @@ class Retina(object):
 
     :param image: a numpy array with the image data
     :param image_path: path to an image to be open
+    :param greyscale: set the internal image as greyscale or rgb
     """
-    def __init__(self, image, image_path):
+    def __init__(self, image, image_path, greyscale=True):
         if image is None:
             self.np_image = io.imread(image_path)
             _, file = path.split(image_path)
@@ -46,9 +47,12 @@ class Retina(object):
 
         self.segmented = False
         self.old_image = None
-        self.np_image = color.rgb2gray(self.np_image)
+        if greyscale:
+            self.np_image = color.rgb2gray(self.np_image)
+            self.depth = 1
+        else:
+            self.depth = 3
         self.shape = self.np_image.shape
-        self.depth = 1
 
 ##################################################################################################
 # Image Processing functions
@@ -170,8 +174,7 @@ class Window(Retina):
             image.filename)
         self.windows = Window.create_windows(image, dimension, method, min_pixels)
         if self.windows == []:
-            self.shape = []
-            self.mode = "empty"
+            raise(ValueError("No windows were created for the given retinal image"))
         else:
             self.shape = self.windows.shape
             self.mode = self.mode_pytorch
@@ -347,9 +350,19 @@ def detect_vessel_border(image: Retina, ignored_pixels=1):
         # sort by x position
         vessel.sort(key=lambda item: item[0])
 
+        # remove all repeating x values
+        current_x = -1
+        filtered_vessel = []
+        for pixel in vessel:
+            if pixel[0] == current_x:
+                pass
+            else:
+                filtered_vessel.append(pixel)
+                current_x = pixel[0]
+
         vessel_x = []
         vessel_y = []
-        for pixel in vessel:
+        for pixel in filtered_vessel:
             vessel_x.append(pixel[0])
             vessel_y.append(pixel[1])
         return [vessel_x, vessel_y]

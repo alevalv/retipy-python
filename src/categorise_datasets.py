@@ -65,25 +65,27 @@ for tag in tags:
 
 clustering = KMeans(n_clusters=3, random_state=0).fit_predict(tag_data)
 
+# count how many windows belong to each class
 count = Counter(c for c in clustering if c+1)
 for cid, count in count.most_common():
     print(cid, count)
 
-
+# add the clustering evaluation to the end of the tag matrix
 the_tag = np.c_[tag_data, clustering]
-print(the_tag.shape)
-print(the_tag)
 
+# create a new matrix to contain all window values
 data_count = 0
 for window in windows:
     data_count += window.shape[0]
 the_window = np.empty([data_count, windows[0].shape[1], windows[0].shape[2], windows[0].shape[3]])
 
+# store the window values in the new matrix
 position = 0
 for window in windows:
     the_window[position:position+window.shape[0]] = window
     position += window.shape[0]
 
+# save the processed dataset
 hf = h5py.File(CONFIG.output_folder + "/input_data.h5", 'w')
 hf.create_dataset('windows', data=the_window)
 hf.create_dataset('tags', data=tag_data)

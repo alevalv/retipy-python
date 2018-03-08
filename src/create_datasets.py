@@ -43,6 +43,7 @@ args = parser.parse_args()
 CONFIG = configuration.Configuration(args.configuration)
 
 for filename in sorted(glob.glob(os.path.join(CONFIG.image_directory, '*.png'))):
+    print("processing {}...".format(filename))
     segmentedImage = retina.Retina(None, filename)
     segmentedImage.threshold_image()
     segmentedImage.reshape_square()
