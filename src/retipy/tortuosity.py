@@ -194,7 +194,10 @@ def tortuosity_density(x, y):
     for in_point in inflection_points:
         segment_x = x[starting_position:in_point]
         segment_y = y[starting_position:in_point]
-        sum_segments += _curve_length(segment_x, segment_y) / _chord_length(segment_x, segment_y) - 1
+        chord = _chord_length(segment_x, segment_y)
+        if chord:
+            sum_segments += _curve_length(segment_x, segment_y) / _chord_length(segment_x, segment_y) - 1
+        starting_position = in_point
 
     return (n - 1)/n + (1/_curve_length(x, y))*sum_segments
 
