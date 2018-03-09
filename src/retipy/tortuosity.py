@@ -73,9 +73,9 @@ def _detect_inflection_points(x, y):
     """
     cf = np.convolve(y, [1, -1])
     inflection_points = []
-    for iterator in range(2, len(x)-2):
+    for iterator in range(2, len(x)):
         if np.sign(cf[iterator]) != np.sign(cf[iterator - 1]):
-            inflection_points.append(iterator)
+            inflection_points.append(iterator - 1)
     return inflection_points
 
 

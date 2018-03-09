@@ -34,9 +34,8 @@ class Retina(object):
 
     :param image: a numpy array with the image data
     :param image_path: path to an image to be open
-    :param greyscale: set the internal image as greyscale or rgb
     """
-    def __init__(self, image, image_path, greyscale=True):
+    def __init__(self, image, image_path):
         if image is None:
             self.np_image = io.imread(image_path)
             _, file = path.split(image_path)
@@ -47,11 +46,8 @@ class Retina(object):
 
         self.segmented = False
         self.old_image = None
-        if greyscale:
-            self.np_image = color.rgb2gray(self.np_image)
-            self.depth = 1
-        else:
-            self.depth = 3
+        self.np_image = color.rgb2gray(self.np_image)
+        self.depth = 1
         self.shape = self.np_image.shape
 
 ##################################################################################################

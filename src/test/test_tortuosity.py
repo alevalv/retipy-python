@@ -75,7 +75,7 @@ class TestTortuosity(TestCase):
     def test_distance_inflection_count_tortuosity(self):
         self.assertEqual(
             tortuosity.distance_inflection_count_tortuosity([0, 2, 4], [0, 2, 4]),
-            2,
+            1,
             "inflection count tortuosity value does not match")
 
     def test_fractal_tortuosity(self):

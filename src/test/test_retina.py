@@ -124,11 +124,6 @@ class TestRetina(TestCase):
         assert_array_equal(windows, [292,146,73], "window array does not match")
 
 
-class TestRetinaRGB(TestRetina):
-    def setUp(self):
-        self.image = retina.Retina(None, _image_path, False)
-
-
 class TestWindow(TestCase):
 
     _image_size = 64
@@ -177,7 +172,7 @@ class TestWindow(TestCase):
         vessels = retina.detect_vessel_border(self._retina_image)
 
         self.assertEqual(len(vessels), 1, "only one vessel should've been extracted")
-        self.assertEqual(len(vessels[0][0]), 14, "vessel should have 14 pixels")
+        self.assertEqual(len(vessels[0][0]), 3, "vessel should have 3 pixels")
 
     def test_save_window(self):
         self._retina_image.np_image[:, :] = 1
