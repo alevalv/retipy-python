@@ -79,7 +79,11 @@ class TestTortuosity(TestCase):
             "inflection count tortuosity value does not match")
 
     def test_fractal_tortuosity(self):
-        print(tortuosity.fractal_tortuosity(retina.Retina(None, "src/resources/images/img1.png")))
+        self.assertAlmostEqual(
+            tortuosity.fractal_tortuosity(retina.Retina(None, "src/resources/images/img1.png")),
+            1.703965,
+            msg="fractal tortuosity does not match",
+            delta=0.00001)
 
     def test_tortuosity_density(self):
         self.assertEqual(
@@ -90,6 +94,12 @@ class TestTortuosity(TestCase):
             tortuosity.tortuosity_density(
                 [1, 2, 3, 4, 5, 6, 7, 8, 9], [1, 2, 3, 2, 1, 2, 3, 4, 5]) > 0,
             "Tortuosity Density should be greater than zero")
+
+    def test_squared_curvature_tortuosity(self):
+        self.assertEqual(
+            tortuosity.squared_curvature_tortuosity([1, 2, 3, 4, 5], [1, 2, 3, 4, 5]),
+            0,
+            "squared curvature tortuosity does not match")
 
     def test_smooth_tortuosity(self):
         self.assertEqual(tortuosity.smooth_tortuosity_cubic(range(0, 11, 1), [0, 1, 2, 3, 4, 5, 4, 3, 2, 1, 0]), 0)

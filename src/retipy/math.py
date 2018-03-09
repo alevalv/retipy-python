@@ -25,7 +25,7 @@ def derivative1_forward_h2(target, y):
     :param y: an array of points with the values
     :return: the derivative of the target with the given values
     """
-    if target+2 >= len(y):
+    if len(y) - 3 < target or target < 0:
         raise(ValueError("need two more points to calculate the derivative"))
     return (-y[target+2] + 4*y[target+1] - 3*y[target])/2
 
@@ -38,7 +38,7 @@ def derivative1_centered_h1(target, y):
     :param y: an array with the values
     :return: the centered derivative of target
     """
-    if len(y)-1 > target > 0:
+    if len(y) - 1 <= target <= 0:
         raise(ValueError("Invalid target, array size {}, given {}".format(len(y), target)))
     return (y[target + 1] - y[target - 1])/2
 
@@ -51,6 +51,6 @@ def derivative2_centered_h1(target, y):
     :param y: an array with the values
     :return: the centered second derivative of target
     """
-    if len(y)-1 > target > 0:
+    if len(y) - 1 <= target <= 0:
         raise(ValueError("Invalid target, array size {}, given {}".format(len(y), target)))
     return (y[target + 1] - 2*y[target] + y[target - 1])/4
