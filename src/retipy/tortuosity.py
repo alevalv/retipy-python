@@ -93,6 +93,7 @@ def linear_regression_tortuosity(x, y, sampling_size=6, retry=True):
     :param y: the y component of the curve
     :param sampling_size: how many pixels
     :param retry: if regression fails due to a zero division, try again by inverting x and y
+    :return: the coefficient of determination of the curve.
     """
     if len(x) < 4:
         raise ValueError("Given curve must have more than 4 elements")
@@ -240,12 +241,11 @@ def evaluate_window(window: Window, min_pixels_per_vessel=6, sampling_size=6, r2
     :param min_pixels_per_vessel:
     :param sampling_size:
     :param r2_threshold:
-    :return:
     """
-    tags = np.empty([window.shape[0], 5])
+    tags = np.empty([window.shape[0], 6])
     # preemptively switch to pytorch.
     window.switch_mode(window.mode_pytorch)
-    t4 = fractal_tortuosity(window)
+    tft = fractal_tortuosity(window)
     for i in range(0, window.shape[0], 1):
         bw_window = window.windows[i, 0, :, :]
         retina = Retina(bw_window, "window{}" + window.filename)
@@ -253,7 +253,7 @@ def evaluate_window(window: Window, min_pixels_per_vessel=6, sampling_size=6, r2
         retina.apply_thinning()
         vessels = detect_vessel_border(retina)
         vessel_count = 0
-        t1, t2, t3, td = 0, 0, 0, 0
+        t1, t2, t3, t4, td = 0, 0, 0, 0, 0
         for vessel in vessels:
             if len(vessel[0]) > min_pixels_per_vessel:
                 vessel_count += 1
@@ -261,11 +261,12 @@ def evaluate_window(window: Window, min_pixels_per_vessel=6, sampling_size=6, r2
                     t1 += 1
                 t2 += distance_measure_tortuosity(vessel[0], vessel[1])
                 t3 += distance_inflection_count_tortuosity(vessel[0], vessel[1])
+                t4 += squared_curvature_tortuosity(vessel[0], vessel[1])
                 td += tortuosity_density(vessel[0], vessel[1])
         if vessel_count > 0:
             t1 = t1/vessel_count
             t2 = t2/vessel_count
             t3 = t3/vessel_count
             td = td/vessel_count
-        tags[i] = t1, t2, t3, t4, td
+        tags[i] = t1, t2, t3, t4, tft, td
     window.tags = tags

@@ -35,9 +35,13 @@ class Retina(object):
     :param image: a numpy array with the image data
     :param image_path: path to an image to be open
     """
+    @staticmethod
+    def _open_image(img_path):
+        return io.imread(img_path)
+
     def __init__(self, image, image_path):
         if image is None:
-            self.np_image = io.imread(image_path)
+            self.np_image = self._open_image(image_path)
             _, file = path.split(image_path)
             self._file_name = file
         else:
@@ -100,6 +104,23 @@ class Retina(object):
             ((0, max_value - self.shape[0]), (0, max_value - self.shape[1])),
             'constant',
             constant_values=(0, 0))
+        self.shape = self.np_image.shape
+
+    def reshape_by_window(self, window: int) -> None:
+        """
+        Reshapes the internal image to be able to be divided by the given window size
+        :param window: an integer with the window size. Considered as a square
+        """
+        acc = 0
+        while acc <= self.shape[0]:
+            acc += window
+        x_pixels = acc - self.shape[0]
+        acc = 0
+        while acc <= self.shape[1]:
+            acc += window
+        y_pixels = acc - self.shape[1]
+        self.np_image = np.pad(
+            self.np_image, ((0, x_pixels), (0, y_pixels)), 'constant', constant_values=(0, 0))
         self.shape = self.np_image.shape
 
     def get_window_sizes(self):
@@ -173,8 +194,8 @@ class Window(Retina):
             raise(ValueError("No windows were created for the given retinal image"))
         else:
             self.shape = self.windows.shape
-            self.mode = self.mode_pytorch
-        self._tags = []
+            self._mode = self.mode_pytorch
+        self._tags = None
 
     @property
     def mode_pytorch(self):
@@ -185,32 +206,37 @@ class Window(Retina):
         return "TF"
 
     @property
-    def tags(self):
+    def tags(self) -> np.ndarray:
         return self._tags
 
     @tags.setter
-    def tags(self, value):
+    def tags(self, value: np.ndarray):
         self._tags = value
         if value.shape[0] != self.shape[0]:
             raise ValueError("Wrong set of tags, expected {} got {}".format(self.shape[0], value.shape[0]))
 
-    def switch_mode(self, mode):
+    @property
+    def mode(self) -> str:
+        return self._mode
+
+    @mode.setter
+    def mode(self, mode):
         """
         Changes the internal window ordering depending on the given mode.
         Tensorflow style is [batch, width, height, depth]
         Pytorch style is [batch, depth, width, height]
         :param mode: new mode to change, can be self.tensorflow or self.pytorch
         """
-        if mode == self.mode_pytorch and self.mode == self.mode_tensorflow:
+        if mode == self.mode_pytorch and self._mode == self.mode_tensorflow:
             twin = np.swapaxes(self.windows, 2, 3)
             self.windows = np.swapaxes(twin, 1, 2)
             self.shape = self.windows.shape
-            self.mode = self.mode_pytorch
-        elif mode == self.mode_tensorflow and self.mode == self.mode_pytorch:
+            self._mode = self.mode_pytorch
+        elif mode == self.mode_tensorflow and self._mode == self.mode_pytorch:
             twin = np.swapaxes(self.windows, 1, 2)
             self.windows = np.swapaxes(twin, 2, 3)
             self.shape = self.windows.shape
-            self.mode = self.mode_tensorflow
+            self._mode = self.mode_tensorflow
 
     def _window_filename(self, window_id):
         return "out_w" + str(window_id) + "_" + self.filename
@@ -227,8 +253,58 @@ class Window(Retina):
             warnings.simplefilter("ignore")
             io.imsave(output_folder + self._window_filename(window_id), self.windows[window_id, 0])
 
+    class _WindowIterator:
+        def __init__(self, window: np.ndarray):
+            self.__window = window
+            self.__iterator = 0
+
+        def __len__(self):
+            return self.__window.shape[0]
+
+        def __next__(self):
+            self.__iterator += 1
+            if self.__iterator <= self.__len__():
+                return self.__window[self.__iterator - 1]
+            else:
+                raise StopIteration
+
+    def __iter__(self):
+        return self._WindowIterator(self.windows)
+
     @staticmethod
-    def create_windows(image: Retina, dimension, method="separated", min_pixels=10):
+    def _create_tag_image(dx: int, dy: int, tags: list) -> np.ndarray:
+        image = np.empty((dx, dy))
+        boxes = len(tags) % 2 + len(tags)
+        box_count = (boxes // 2)
+        tag_x = dx // box_count
+        tag_y = dy // 2
+        for i in range(0, boxes):
+            cx = (i % box_count) * tag_x
+            cy = (i // box_count) * tag_y
+            image[cx:cx+tag_x, cy:cy+tag_y] = tags[i]
+        return image
+
+    def view_window(self, w_id, layer):  # pragma: no cover
+        io.imshow(self.windows[w_id, layer])
+        plt.show()
+
+    def set_tag_layer(self):
+        """
+        this method adds the tags values as a new depth window.
+        The image will be splitted by the number of tags, resulting in a rectangle per
+        tag which will contain the tag value repeated on it.
+        """
+        if self.tags is None:
+            raise ValueError("tags is not set")
+        if self.mode != self.mode_pytorch:
+            self.mode = self.mode_pytorch
+
+        for i in range(0, self.tags.shape[0]):
+            self.windows[i, -1] = self._create_tag_image(
+                self.windows.shape[2], self.windows.shape[3], self.tags[i])
+
+    @staticmethod
+    def create_windows(image: Retina, dimension, method="separated", min_pixels=10, green_channel=False) -> np.ndarray:
         """
         Creates multiple square windows of the given dimension for the current retinal image.
         Empty windows (i.e. only background) will be ignored

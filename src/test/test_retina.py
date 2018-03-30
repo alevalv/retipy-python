@@ -26,9 +26,9 @@ from skimage import color, filters, io
 
 from retipy import retina
 
-_resources = 'src/resources'
-_image_file_name = 'img1.png'
-_image_path = _resources + "/images/" + _image_file_name
+_resources = 'src/resources/images/'
+_image_file_name = 'img01.png'
+_image_path = _resources + _image_file_name
 
 
 class TestRetina(TestCase):
@@ -123,6 +123,12 @@ class TestRetina(TestCase):
         windows = self.image.get_window_sizes()
         assert_array_equal(windows, [292,146,73], "window array does not match")
 
+    def test_reshape_by_window(self):
+        print(self.image.shape)
+        self.image.reshape_by_window(32)
+        print(self.image.shape)
+        self.assertEqual(self.image.shape[0] % 32, 0, "modulo should be zero after reshape")
+        self.assertEqual(self.image.shape[1] % 32, 0, "modulo should be zero after reshape")
 
 class TestWindow(TestCase):
 
@@ -186,14 +192,14 @@ class TestWindow(TestCase):
         window = retina.Window(self._retina_image, 8, min_pixels=0)
         self.assertRaises(ValueError, window.save_window, 80, "./")
 
-    def test_switch_mode(self):
+    def test_mode(self):
         window = retina.Window(self._retina_image, 8, min_pixels=0)
         assert_array_equal(window.shape, [64, 1, 8, 8], "window shape is incorrect")
 
-        window.switch_mode(window.mode_tensorflow)
+        window.mode = window.mode_tensorflow
         assert_array_equal(window.shape, [64, 8, 8, 1], "window shape is incorrect")
 
-        window.switch_mode(window.mode_pytorch)
+        window.mode = window.mode_pytorch
         assert_array_equal(window.shape, [64, 1, 8, 8], "window shape is incorrect")
 
     def test_tags(self):
@@ -207,3 +213,47 @@ class TestWindow(TestCase):
         with self.assertRaises(ValueError):
             tags = np.zeros([1, 4])
             window.tags = tags
+
+    def test_create_tag_image(self):
+        image = retina.Window._create_tag_image(6, 6, [0, 50, 100, 150, 200, 255])
+        # retina.Retina(image, "test").view()
+
+    def test_set_tag_layer(self):
+        image = retina.Retina(None, _image_path)
+        image.reshape_by_window(56)
+        window = retina.Window(image, 56, min_pixels=10)
+        tags = np.full([window.shape[0], 4], 100)
+        tags[:, 3] = 50
+        window.tags = tags
+        window.set_tag_layer()
+
+    def test_set_tag_layer_tags_not_set(self):
+        image = retina.Retina(None, _image_path)
+        image.reshape_by_window(56)
+        window = retina.Window(image, 56, min_pixels=10)
+        with self.assertRaises(ValueError):
+            window.set_tag_layer()
+
+    def test_set_tag_layer_mode_tensorflow(self):
+        image = retina.Retina(None, _image_path)
+        image.reshape_by_window(56)
+        window = retina.Window(image, 56, min_pixels=10)
+        window.mode = window.mode_tensorflow
+        tags = np.full([window.shape[0], 4], 100)
+        tags[:, 3] = 50
+        window.tags = tags
+        window.set_tag_layer()
+
+    def test_iterator(self):
+        image = retina.Retina(None, _image_path)
+        image.reshape_by_window(56)
+        windows = retina.Window(image, 56, min_pixels=10)
+        size = windows.windows.shape[0]
+        iterated_size = 0
+        for _ in windows:
+            iterated_size += 1
+        self.assertEqual(size, iterated_size, "iterated structure size does not match")
+
+        for window in windows:
+            assert_array_equal(window, windows.windows[0])
+            break

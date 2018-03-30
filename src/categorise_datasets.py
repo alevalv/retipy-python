@@ -85,8 +85,10 @@ for window in windows:
     the_window[position:position+window.shape[0]] = window
     position += window.shape[0]
 
+print(the_window.shape)
+print(the_tag.shape)
 # save the processed dataset
 hf = h5py.File(CONFIG.output_folder + "/input_data.h5", 'w')
 hf.create_dataset('windows', data=the_window)
-hf.create_dataset('tags', data=tag_data)
+hf.create_dataset('tags', data=the_tag)
 hf.close()
