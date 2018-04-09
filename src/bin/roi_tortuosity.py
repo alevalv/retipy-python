@@ -1,17 +1,29 @@
 #!/usr/bin/env python3
+# Retipy - Retinal Image Processing on Python
+# Copyright (C) 2018  Alejandro Valdes
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
+Executable file to test some tortuosity measures included in the tortuosity module of retipy
+"""
 
 import argparse
 import json
-from retipy import retina, tortuosity
-
-
-def tortuosity_window(x1, y1, x2, y2, name, description):
-    tw = {}
-    tw["name"] = name
-    tw["description"] = description
-    tw["roi_x"] = [x1, x1, x2, x2]
-    tw["roi_y"] = [y1, y2, y2, y1]
-    return tw
+import numpy as np
+from PIL import Image
+from retipy import tortuosity
 
 
 parser = argparse.ArgumentParser()
@@ -30,34 +42,16 @@ parser.add_argument(
 args = parser.parse_args()
 
 # TODO: this should be able to process from a basic test, a RBG image, right now it will be on segmentation only
-image = retina.Retina(None, args.image_path)
-image.threshold_image()
-image.reshape_by_window(args.window_size)
-windows = retina.Window(image, args.window_size, min_pixels=10, method=args.window_creation_method)
-
-evaluation = \
-    {
-        "uri": args.image_path,
-        "data": []
-    }
+image = Image.open(args.image_path).convert('L')
+evaluation = {"success": False}
 
 if args.algorithm == "TD":
-    for i in range(0, windows.shape[0]):
-        window = windows.windows[i, 0]
-        w_pos = windows.w_pos[i]
-        image = retina.Retina(window, "td")
-        image.threshold_image()
-        image.apply_thinning()
-        vessels = retina.detect_vessel_border(image)
-        processed_vessel_count = 0
-        for vessel in vessels:
-            if len(vessel[0]) > 10:
-                processed_vessel_count += 1
-                tortuosity_density = tortuosity.tortuosity_density(vessel[0], vessel[1])
-                if tortuosity_density > args.threshold:
-                    evaluation["data"].append(tortuosity_window(
-                        w_pos[0, 0].item(), w_pos[0, 1].item(), w_pos[1, 0].item(), w_pos[1, 1].item(),
-                        "High Tortuosity", "Tortuosity Density Value: {}".format(tortuosity_density)))
+    evaluation = tortuosity.density(
+        np.array(image),
+        window_size=args.window_size,
+        min_pixels=10,
+        creation_method=args.window_creation_method,
+        threshold=args.threshold)
 
 encoder = json.JSONEncoder()
 print(encoder.encode(evaluation))

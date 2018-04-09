@@ -1,5 +1,5 @@
 # Retipy - Retinal Image Processing on Python
-# Copyright (C) 2017  Alejandro Valdes
+# Copyright (C) 2017-2018  Alejandro Valdes
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,15 +16,17 @@
 
 """retina module to handle basic image processing on retinal images"""
 
-from os import path
-from copy import copy
+import base64
 import numpy as np
 import warnings
-
+from copy import copy
+from io import BytesIO
+from lib import thinning
+from matplotlib import pyplot as plt
+from os import path
+from PIL import Image
 from scipy import ndimage
 from skimage import color, feature, filters, io
-from matplotlib import pyplot as plt
-from lib import thinning
 
 
 class Retina(object):
@@ -39,7 +41,14 @@ class Retina(object):
     def _open_image(img_path):
         return io.imread(img_path)
 
-    def __init__(self, image, image_path):
+    @staticmethod
+    def get_base64_image(image: np.ndarray):
+        temp_image = Image.fromarray(image.astype('uint8'), 'L')
+        buffer = BytesIO()
+        temp_image.save(buffer, format="png")
+        return str(base64.b64encode(buffer.getvalue()).decode('utf-8'))
+
+    def __init__(self, image: np.ndarray, image_path: str):
         if image is None:
             self.np_image = self._open_image(image_path)
             _, file = path.split(image_path)
@@ -51,6 +60,7 @@ class Retina(object):
         self.segmented = False
         self.old_image = None
         self.np_image = color.rgb2gray(self.np_image)
+        self.original_base64 = self.get_base64_image(self.np_image)
         self.depth = 1
         self.shape = self.np_image.shape
 

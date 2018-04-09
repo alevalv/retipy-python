@@ -29,7 +29,7 @@ import os
 import h5py
 # import scipy.stats as stats
 
-from retipy import configuration, retina, tortuosity
+from retipy import configuration, retina, tortuosity_measures
 
 parser = argparse.ArgumentParser()
 
@@ -50,7 +50,7 @@ for filename in sorted(glob.glob(os.path.join(CONFIG.image_directory, '*.png')))
     window_sizes = segmentedImage.get_window_sizes()
     window = retina.Window(
         segmentedImage, window_sizes[-1], min_pixels=CONFIG.pixels_per_window)
-    tortuosity.evaluate_window(window, CONFIG.pixels_per_window, CONFIG.sampling_size, CONFIG.r_2_threshold)
+    tortuosity_measures.evaluate_window(window, CONFIG.pixels_per_window, CONFIG.sampling_size, CONFIG.r_2_threshold)
     hf = h5py.File(CONFIG.output_folder + "/" + segmentedImage.filename + ".h5", 'w')
     hf.create_dataset('windows', data=window.windows)
     hf.create_dataset('tags', data=window.tags)

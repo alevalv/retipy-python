@@ -33,5 +33,5 @@ setup(
         'Programming Language :: Python :: 3.6'
     ],
     packages=find_packages(exclude=["test", "util"]),
-    install_requires=['matplotlib', 'numpy', 'pillow', 'scikit-image', 'scipy', 'h5py', 'scikit-learn']
+    install_requires=['matplotlib', 'numpy', 'pillow', 'scikit-image', 'scipy', 'h5py', 'scikit-learn', 'flask']
     )

@@ -30,11 +30,11 @@ USER retipy
 ADD matplotlibrc /home/retipy/.config/matplotlib/matplotlibrc
 
 RUN pip --no-cache-dir install --upgrade pip && \
-    pip --no-cache-dir install setuptools numpy matplotlib pillow scikit-image scipy h5py scikit-learn
+    pip --no-cache-dir install setuptools numpy matplotlib pillow scikit-image scipy h5py scikit-learn flask
 
 ENV RETIPY_HOME /home/retipy/src
 
-RUN git clone git://github.com/alevalv/retipy.git /opt/retipy && \
+RUN git clone -b feature/json git://github.com/alevalv/retipy.git /opt/retipy && \
     pip install -e /opt/retipy/src/ && \
     mkdir ${RETIPY_HOME} && \
     cp /opt/retipy/src/*.py ${RETIPY_HOME} && \
