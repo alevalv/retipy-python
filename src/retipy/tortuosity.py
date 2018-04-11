@@ -36,8 +36,8 @@ def density(
         image: np.ndarray,
         window_size: int = 56,
         min_pixels: int = 10,
-        creation_method: str = "combined",
-        threshold: float = 0.96) -> dict:
+        creation_method: str = "separated",
+        threshold: float = 0.97) -> dict:
     image = retina.Retina(image, "tortuosity_density")
     image.reshape_by_window(window_size)
     image.threshold_image()
@@ -46,7 +46,7 @@ def density(
         {
             "uri": "tortuosity_density",
             "data": [],
-            "image": image.original_base64
+            # "image": image.original_base64  # TODO: maybe return a processed image?
         }
 
     for i in range(0, windows.shape[0]):

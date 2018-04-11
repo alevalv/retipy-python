@@ -19,6 +19,7 @@ Module with all REST endpoints to calculate tortuosity measures given a grayscal
 All operations are implemented as POST
 """
 
+import base64
 import flask
 import io
 import numpy as np
@@ -35,9 +36,9 @@ def post_tortuosity_density():
     data = {"success": False}
 
     if flask.request.method == "POST":
-        if flask.request.files.get("image"):
-            image = flask.request.files["image"].read()
+        json = flask.request.get_json(silent=True)
+        if json is not None:
+            image = base64.b64decode(json["image"])
             image = Image.open(io.BytesIO(image)).convert('L')
             data = tortuosity.density(np.array(image))
-
     return flask.jsonify(data)

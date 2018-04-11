@@ -7,7 +7,7 @@ ENV PATH ${CONDA_DIR}/bin:$PATH
 
 RUN yum update -y
 
-RUN yum install -y wget git g++ bzip2 zsh libglib2.0-0 libsm6 libxrender1 libgl1 libhdf5-dev && \
+RUN yum install -y wget git g++ bzip2 zsh libglib2.0-0 libsm6 libxrender1 libgl1 libhdf5-dev tk-devel tkinter && \
     yum clean all
 
 RUN wget --no-check-certificate --quiet http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
@@ -16,6 +16,8 @@ RUN wget --no-check-certificate --quiet http://repo.continuum.io/miniconda/Minic
 
 ENV NB_USER retipy
 ENV NB_UID 1000
+ENV LC_ALL en_US.utf-8
+ENV LANG en_US.utf-8
 
 RUN useradd -m -s /bin/zsh -N -u ${NB_UID} ${NB_USER} && \
     mkdir -p ${CONDA_DIR} && \
@@ -24,6 +26,8 @@ RUN useradd -m -s /bin/zsh -N -u ${NB_UID} ${NB_USER} && \
     chown ${NB_USER} /src -R  && \
     mkdir -p /opt/retipy && \
     chown ${NB_USER} /opt/retipy -R
+
+RUN localedef -i en_US -f UTF-8 en_US.UTF-8
 
 USER retipy
 
@@ -45,4 +49,8 @@ RUN git clone -b feature/json git://github.com/alevalv/retipy.git /opt/retipy &&
 
 ADD matplotlibrc ${RETIPY_HOME}/matplotlibrc
 
-WORKDIR ${RETIPY_HOME}
+EXPOSE 5000
+
+ENV PATH /opt/retipy/src/bin:$PATH
+
+CMD ["/bin/sh", "/opt/retipy/src/bin/start_server.sh"]
