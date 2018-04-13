@@ -20,6 +20,7 @@ from os import path
 from copy import copy
 import numpy as np
 import warnings
+import cv2
 
 from scipy import ndimage
 from skimage import color, feature, filters, io
@@ -53,6 +54,26 @@ class Retina(object):
         self.np_image = color.rgb2gray(self.np_image)
         self.depth = 1
         self.shape = self.np_image.shape
+
+    """
+    :param image_path: path to an fundus image to be open
+    :param result_image_path: path to an  to be open
+    :param mask_path: path to an fundus image to be open
+    """
+    def __init__(self, image_path, result_image_path, mask_path):
+        self.np_image = io.imread(image_path)
+        _, file = path.split(image_path)
+        self._file_name = file
+        self.result_image = io.imread(result_image_path)
+        self.result_image[self.result_image == 255] = 1
+        self.segmented = False
+        self.old_image = None
+        self.np_image = self.np_image[:, :, 1]
+        self.mask = io.imread(mask_path)
+        self.mask[self.mask == 255] = 1
+        self.depth = 1
+        self.shape = self.np_image.shape
+        self.fe = np.zeros((np.sum(self.mask == True), 15))
 
 ##################################################################################################
 # Image Processing functions
@@ -137,6 +158,72 @@ class Retina(object):
                 current_value = current_value // 2
                 sizes.append(current_value)
         return sizes
+
+    def equalize_histogram(self):
+        """Applies contrast limited adaptive histogram equalization algorithm (CLAHE)"""
+        self._copy()
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        self.np_image = clahe.apply(self.np_image)
+        self.np_image[self.mask == 0] = 0
+
+    def opening(self, size_structure):
+        """
+        dilates and erodes the stored image, by default the structure is a cross
+        :param size_structure: size of kernel to apply in the filter
+        """
+        self._copy()
+        self.np_image = ndimage.grey_opening(self.np_image, size=(size_structure, size_structure))
+
+    def top_hat(self, size_structuring_element):
+        """
+        Applies Top-hat filter
+        :param size_structure: size of kernel to apply in the filter
+        """
+        self._copy()
+        self.np_image = cv2.morphologyEx(self.np_image, cv2.MORPH_TOPHAT, cv2.getStructuringElement(cv2.MORPH_RECT, (size_structuring_element, size_structuring_element)))
+
+    def shadow_correction(self):
+        """Applies a some filters to get the background, then subtract the original image to get an image of corrected shadows"""
+        self._copy()
+        minuendo = np.copy(self.np_image)
+        self.mean_filter(3)
+        self.gaussian_filter(9, 1.82)
+        mean_value = np.mean(self.np_image)
+        self.np_image[self.mask] = mean_value # Valores fuera del FOV pasan a ser valores promedio antes de aplciar el filtro de mediana
+        minuendo[self.mask] = 0
+        self.median_filter(40)
+        self.np_image = minuendo - self.np_image
+        min = self.np_image.min()
+        self.np_image = self.np_image - min # Se desplaza el resultado hacia valores positivos
+        max = self.np_image.max()
+        escala = float(255)/(max)
+        mask2 = self.np_image < 0
+        for row in range(0, self.shape[0]):
+            for col in range(0, self.shape[1]):
+                self.np_image[row, col] = int(self.np_image[row, col] * escala)
+        self.np_image[self.mask == 0] = 0
+        self.np_image[mask2] = 0
+
+    def homogenize(self):
+        """Moves all the values resulting from the correction of the shadows to the possible 255 values"""
+        self._copy()
+        g_input_max = self.np_image.max()
+        aux = np.zeros(self.shape)
+        for row in range(0, self.shape[0]):
+            for col in range(0, self.shape[1]):
+                g = self.np_image[row, col] + 180 - g_input_max
+                if (g < 0):
+                    aux[row, col] = 0
+                elif (g > 255):
+                    aux[row, col] = 255
+                else:
+                    aux[row, col] = g
+        self.IH = np.copy(aux)
+
+    def vessel_enhancement(self):
+        """Generates a new vessel-enhanced image"""
+        self.np_image = abs(self.IH - 255)
+        self.top_hat(15)
 
 ##################################################################################################
 # I/O functions
