@@ -26,7 +26,6 @@ import math
 from scipy import ndimage, signal
 from skimage import io
 from matplotlib import pyplot as plt
-from PIL import Image
 
 
 class Retina_grayscale(object):
@@ -54,7 +53,11 @@ class Retina_grayscale(object):
         self.gray255_to_bin(self.result_image)
 
         self.mask = io.imread(mask_path)
+        self.gray255_to_bin(self.mask)
         self.fe = np.zeros((np.sum(self.mask == True), 15))
+
+        self.segmented = False
+        self.segmented_image = np.zeros((self.shape))
 
 ##################################################################################################
 # Image Processing functions
@@ -167,7 +170,6 @@ class Retina_grayscale(object):
         for row in range(9, self.shape[0] - 8):
             for col in range(9, self.shape[1] - 8):
                 if (self.mask[row, col] == 1):
-
                     region = self.IH[row - 4:row + 4, col - 4:col + 4]
                     pixel = self.IH[row, col]
                     f1 = pixel - np.min(region)
@@ -190,6 +192,8 @@ class Retina_grayscale(object):
                                             self.result_image[row, col], row, col]
                     contador = contador + 1
 
+##################################################################################################
+# I/O functions
 ##################################################################################################
 # I/O functions
 
