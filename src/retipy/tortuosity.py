@@ -64,6 +64,43 @@ def density(
                 if tortuosity_density > threshold:
                     evaluation["data"].append(_tortuosity_window(
                         w_pos[0, 0].item(), w_pos[0, 1].item(), w_pos[1, 0].item(), w_pos[1, 1].item(),
-                        "High Tortuosity", "Tortuosity Density Value: {}".format(tortuosity_density)))
+                        "Tortuous", "{}".format(tortuosity_density)))
+
+    return evaluation
+
+
+def fractal(
+        image: np.ndarray,
+        window_size: int = 56,
+        min_pixels: int = 10,
+        creation_method: str = "separated",
+        threshold: float = 0.94) -> dict:
+    image = retina.Retina(image, "tortuosity_density")
+    image.reshape_by_window(window_size)
+    image.threshold_image()
+    windows = retina.Window(image, window_size, min_pixels=min_pixels, method=creation_method)
+    evaluation = \
+        {
+            "uri": "fractal_dimension",
+            "data": [],
+            # "image": image.original_base64  # TODO: maybe return a processed image?
+        }
+
+    for i in range(0, windows.shape[0]):
+        window = windows.windows[i, 0]
+        w_pos = windows.w_pos[i]
+        image = retina.Retina(window, "tf")
+        image.threshold_image()
+        image.apply_thinning()
+        vessels = retina.detect_vessel_border(image)
+        processed_vessel_count = 0
+        for vessel in vessels:
+            if len(vessel[0]) > 10:
+                processed_vessel_count += 1
+                fractal_tortuosity = tortuosity_measures.fractal_tortuosity_curve(vessel[0], vessel[1])
+                if fractal_tortuosity > threshold:
+                    evaluation["data"].append(_tortuosity_window(
+                        w_pos[0, 0].item(), w_pos[0, 1].item(), w_pos[1, 0].item(), w_pos[1, 1].item(),
+                        "Tortuous", "{}".format(fractal_tortuosity)))
 
     return evaluation

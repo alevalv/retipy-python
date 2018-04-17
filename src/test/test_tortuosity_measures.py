@@ -19,87 +19,92 @@
 from unittest import TestCase
 from numpy.testing import assert_array_equal
 
-from retipy import tortuosity_measures, retina
+from retipy import tortuosity_measures as tm, retina
 
 
 class TestTortuosity(TestCase):
     _straight_line =[1, 2, 3, 4, 5, 6, 7]
 
-    tortuosity_measures.SAMPLING_SIZE = 2
+    tm.SAMPLING_SIZE = 2
 
     def test_linear_regression_tortuosity(self):
         self.assertEqual(
-            tortuosity_measures.linear_regression_tortuosity(self._straight_line, self._straight_line),
+            tm.linear_regression_tortuosity(self._straight_line, self._straight_line),
             1,
             "a straight line should return 1")
 
     def test_linear_regression_tortuosity_error_size(self):
         self.assertRaises(
-            ValueError, tortuosity_measures.linear_regression_tortuosity, [1], [1])
+            ValueError, tm.linear_regression_tortuosity, [1], [1])
 
     def test_linear_regression_tortuosity_no_second_try(self):
         self.assertEqual(
-            tortuosity_measures.linear_regression_tortuosity([1, 2, 3, 4], [1, 1, 1, 1], False),
+            tm.linear_regression_tortuosity([1, 2, 3, 4], [1, 1, 1, 1], False),
             1,
             "should return 1")
 
     def test_linear_regression_tortuosity_no_interpolation(self):
         self.assertEqual(
-            tortuosity_measures.linear_regression_tortuosity([1, 2, 3, 4], [1, 1, 1, 1]),
+            tm.linear_regression_tortuosity([1, 2, 3, 4], [1, 1, 1, 1]),
             1,
             "should return 1")
 
     def test_distance_2p(self):
-        self.assertEqual(tortuosity_measures._distance_2p(0, 0, 0, 1), 1, "distance does not match")
+        self.assertEqual(tm._distance_2p(0, 0, 0, 1), 1, "distance does not match")
 
     def test_curve_length(self):
         self.assertEqual(
-            tortuosity_measures._curve_length([0, 0], [0, 1]), 1, "curve distance does not match")
+            tm._curve_length([0, 0], [0, 1]), 1, "curve distance does not match")
 
     def test_distance_measure_tortuosity(self):
         self.assertEqual(
-            tortuosity_measures.distance_measure_tortuosity([0, 2, 4], [0, 2, 4]),
+            tm.distance_measure_tortuosity([0, 2, 4], [0, 2, 4]),
             1,
             "distance measure does not match")
 
     def test_distance_measure_tortuosity_error(self):
         self.assertRaises(
-            ValueError, tortuosity_measures.distance_measure_tortuosity, [1], [2])
+            ValueError, tm.distance_measure_tortuosity, [1], [2])
 
     def test_detect_inflection_points(self):
         assert_array_equal(
             [2, 3, 4],
-            tortuosity_measures._detect_inflection_points([0, 1, 2, 3, 4, 5], [4, 6, 8, 6, 9, 0]),
+            tm._detect_inflection_points([0, 1, 2, 3, 4, 5], [4, 6, 8, 6, 9, 0]),
             "inflection points does not match")
 
     def test_distance_inflection_count_tortuosity(self):
         self.assertEqual(
-            tortuosity_measures.distance_inflection_count_tortuosity([0, 2, 4], [0, 2, 4]),
+            tm.distance_inflection_count_tortuosity([0, 2, 4], [0, 2, 4]),
             1,
             "inflection count tortuosity value does not match")
 
     def test_fractal_tortuosity(self):
         self.assertAlmostEqual(
-            tortuosity_measures.fractal_tortuosity(retina.Retina(None, "src/resources/images/img01.png")),
+            tm.fractal_tortuosity(retina.Retina(None, "src/resources/images/img01.png")),
             1.703965,
             msg="fractal tortuosity does not match",
             delta=0.00001)
 
     def test_tortuosity_density(self):
         self.assertEqual(
-            tortuosity_measures.tortuosity_density([1, 2, 3, 4, 5], [1, 2, 3, 4, 5]),
+            tm.tortuosity_density([1, 2, 3, 4, 5], [1, 2, 3, 4, 5]),
             0,
             "Tortuosity Density should be zero")
         self.assertTrue(
-            tortuosity_measures.tortuosity_density(
+            tm.tortuosity_density(
                 [1, 2, 3, 4, 5, 6, 7, 8, 9], [1, 2, 3, 2, 1, 2, 3, 4, 5]) > 0,
             "Tortuosity Density should be greater than zero")
 
     def test_squared_curvature_tortuosity(self):
         self.assertEqual(
-            tortuosity_measures.squared_curvature_tortuosity([1, 2, 3, 4, 5], [1, 2, 3, 4, 5]),
+            tm.squared_curvature_tortuosity([1, 2, 3, 4, 5], [1, 2, 3, 4, 5]),
             0,
             "squared curvature tortuosity does not match")
 
     def test_smooth_tortuosity(self):
-        self.assertEqual(tortuosity_measures.smooth_tortuosity_cubic(range(0, 11, 1), [0, 1, 2, 3, 4, 5, 4, 3, 2, 1, 0]), 0)
+        self.assertEqual(tm.smooth_tortuosity_cubic(range(0, 11, 1), [0, 1, 2, 3, 4, 5, 4, 3, 2, 1, 0]), 0)
+        
+    def test_curve_to_image(self):
+        image = tm._curve_to_image([1, 2, 3, 4, 5], [10, 11, 12, 13, 14])
+        image.view()
+        print(tm.fractal_tortuosity(image))

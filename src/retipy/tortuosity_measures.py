@@ -16,9 +16,8 @@
 
 """Module with operations related to extracting tortuosity measures."""
 
-import cmath
+import math
 import numpy as np
-
 from lib import fractal_dimension, smoothing
 from retipy import math as m
 from retipy.retina import Retina, Window, detect_vessel_border
@@ -79,6 +78,43 @@ def _detect_inflection_points(x, y):
     return inflection_points
 
 
+def _curve_to_image(x, y):
+    # get the maximum and minimum x and y values
+    mm_values = np.empty([2, 2], dtype=np.int)
+    mm_values[0, :] = 99999999999999
+    mm_values[1, :] = -99999999999999
+    for i in range(0, len(x)):
+        if x[i] < mm_values[0, 0]:
+            mm_values[0, 0] = x[i]
+        if x[i] > mm_values[1, 0]:
+            mm_values[1, 0] = x[i]
+        if y[i] < mm_values[0, 1]:
+            mm_values[0, 1] = y[i]
+        if y[i] > mm_values[1, 1]:
+            mm_values[1, 1] = y[i]
+    distance_x = mm_values[1, 0] - mm_values[0, 0]
+    distance_y = mm_values[1, 1] - mm_values[0, 1]
+    # calculate which square with side 2^n of size will contain the line
+    image_dim = 2
+    while image_dim < distance_x or image_dim < distance_y:
+        image_dim *= 2
+    image_dim *= 2
+    # values to center the
+    padding_x = (mm_values[1, 0] - mm_values[0, 0]) // 2
+    padding_y = (mm_values[1, 1] - mm_values[0, 1]) // 2
+
+    image_curve = np.full([image_dim, image_dim], False)
+
+    for i in range(0, len(x)):
+        x[i] = x[i] - mm_values[0, 0]
+        y[i] = y[i] - mm_values[0, 1]
+
+    for i in range(0, len(x)):
+        image_curve[x[i], y[i]] = True
+
+    return Retina(image_curve, "curve_image")
+
+
 def linear_regression_tortuosity(x, y, sampling_size=6, retry=True):
     """
     This method calculates a tortuosity measure by estimating a line that start and ends with the
@@ -133,6 +169,8 @@ def linear_regression_tortuosity(x, y, sampling_size=6, retry=True):
             r_2 = linear_regression_tortuosity(y, x, retry=False)
         else:
             r_2 = 1  # mark not applicable vessels as not tortuous?
+    if math.isnan(r_2):
+        r_2 = 0
     return r_2
 
 
@@ -174,6 +212,11 @@ def fractal_tortuosity(retinal_image: Retina):
     :return: the fractal dimension of the given image
     """
     return fractal_dimension.fractal_dimension(retinal_image.np_image)
+
+
+def fractal_tortuosity_curve(x, y):
+    image = _curve_to_image(x, y)
+    return fractal_dimension.fractal_dimension(image.np_image)
 
 
 def tortuosity_density(x, y):
@@ -219,7 +262,7 @@ def squared_curvature_tortuosity(x, y):
         y_1 = m.derivative1_centered_h1(i, y)
         y_2 = m.derivative2_centered_h1(i, y)
         curvatures.append((x_1*y_2 - x_2*y_1)/(y_1**2 + x_1**2)**1.5)
-    return np.trapz(curvatures, x_values)
+    return abs(np.trapz(curvatures, x_values))
 
 
 def smooth_tortuosity_cubic(x, y):
@@ -242,9 +285,9 @@ def evaluate_window(window: Window, min_pixels_per_vessel=6, sampling_size=6, r2
     :param sampling_size:
     :param r2_threshold:
     """
-    tags = np.empty([window.shape[0], 6])
+    tags = np.empty([window.shape[0], 7])
     # preemptively switch to pytorch.
-    window.switch_mode(window.mode_pytorch)
+    window.mode = window.mode_pytorch
     tft = fractal_tortuosity(window)
     for i in range(0, window.shape[0], 1):
         bw_window = window.windows[i, 0, :, :]
@@ -253,7 +296,7 @@ def evaluate_window(window: Window, min_pixels_per_vessel=6, sampling_size=6, r2
         retina.apply_thinning()
         vessels = detect_vessel_border(retina)
         vessel_count = 0
-        t1, t2, t3, t4, td = 0, 0, 0, 0, 0
+        t1, t2, t3, t4, td, tfi = 0, 0, 0, 0, 0, 0
         for vessel in vessels:
             if len(vessel[0]) > min_pixels_per_vessel:
                 vessel_count += 1
@@ -263,10 +306,11 @@ def evaluate_window(window: Window, min_pixels_per_vessel=6, sampling_size=6, r2
                 t3 += distance_inflection_count_tortuosity(vessel[0], vessel[1])
                 t4 += squared_curvature_tortuosity(vessel[0], vessel[1])
                 td += tortuosity_density(vessel[0], vessel[1])
+                tfi += fractal_tortuosity_curve(vessel[0], vessel[1])
         if vessel_count > 0:
             t1 = t1/vessel_count
             t2 = t2/vessel_count
             t3 = t3/vessel_count
             td = td/vessel_count
-        tags[i] = t1, t2, t3, t4, tft, td
+        tags[i] = t1, t2, t3, t4, td, tfi, tft
     window.tags = tags
