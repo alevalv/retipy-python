@@ -32,11 +32,6 @@ class BenchmarkTortuosity(TestCase):
 
     def test_benchmark_density(self):
         outputs = np.empty([self._measures, 5, 2])
-        td = []
-        tlr = []
-        tdi = []
-        tdm = []
-        tsq = []
         for i in range(0, 5):
             outputs[:, i, 0] = i
             outputs[0, i, 1] = tm.tortuosity_density(self._line[i, 0], self._line[i, 1])
@@ -67,7 +62,7 @@ class BenchmarkTortuosity(TestCase):
         print(outputs[1, :, 1])
         plt.plot(outputs[0, :, 0], outputs[0, :, 1], label="density")
         plt.plot(outputs[1, :, 0], outputs[1, :, 1], label="linear regression")
-        # plt.plot(outputs[2, :, 0], outputs[2, :, 1], label="inflection count")
+        plt.plot(outputs[2, :, 0], outputs[2, :, 1], label="inflection count")
         plt.plot(outputs[3, :, 0], outputs[3, :, 1], label="distance measure")
         plt.plot(outputs[4, :, 0], outputs[4, :, 1], label="squared curvature")
         plt.plot(outputs[5, :, 0], outputs[5, :, 1], label="fractal")

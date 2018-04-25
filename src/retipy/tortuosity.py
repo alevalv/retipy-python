@@ -64,7 +64,7 @@ def density(
                 if tortuosity_density > threshold:
                     evaluation["data"].append(_tortuosity_window(
                         w_pos[0, 0].item(), w_pos[0, 1].item(), w_pos[1, 0].item(), w_pos[1, 1].item(),
-                        "Tortuous", "{}".format(tortuosity_density)))
+                        "Tortuous", "{0:.2f}".format(tortuosity_density)))
 
     return evaluation
 
@@ -101,6 +101,6 @@ def fractal(
                 if fractal_tortuosity > threshold:
                     evaluation["data"].append(_tortuosity_window(
                         w_pos[0, 0].item(), w_pos[0, 1].item(), w_pos[1, 0].item(), w_pos[1, 1].item(),
-                        "Tortuous", "{}".format(fractal_tortuosity)))
+                        "Tortuous", "{0:.2f}".format(fractal_tortuosity)))
 
     return evaluation
