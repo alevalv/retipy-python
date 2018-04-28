@@ -169,7 +169,7 @@ def linear_regression_tortuosity(x, y, sampling_size=6, retry=True):
             r_2 = linear_regression_tortuosity(y, x, retry=False)
         else:
             r_2 = 1  # mark not applicable vessels as not tortuous?
-    if math.isnan(r_2):
+    if math.isnan(r_2):  # pragma: no cover
         r_2 = 0
     return r_2
 

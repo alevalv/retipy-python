@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""tests for tortuosity module"""
+"""tests for tortuosity measures module"""
 
 from unittest import TestCase
 from numpy.testing import assert_array_equal
@@ -22,7 +22,7 @@ from numpy.testing import assert_array_equal
 from retipy import tortuosity_measures as tm, retina
 
 
-class TestTortuosity(TestCase):
+class TestTortuosityMeasures(TestCase):
     _straight_line =[1, 2, 3, 4, 5, 6, 7]
 
     tm.SAMPLING_SIZE = 2
@@ -104,7 +104,6 @@ class TestTortuosity(TestCase):
     def test_smooth_tortuosity(self):
         self.assertEqual(tm.smooth_tortuosity_cubic(range(0, 11, 1), [0, 1, 2, 3, 4, 5, 4, 3, 2, 1, 0]), 0)
         
-    def test_curve_to_image(self):
-        image = tm._curve_to_image([1, 2, 3, 4, 5], [10, 11, 12, 13, 14])
-        image.view()
-        print(tm.fractal_tortuosity(image))
+    def test_fractal_tortuosity_curve(self):
+        val = tm.fractal_tortuosity_curve([1, 2, 3, 4, 5], [10, 11, 12, 13, 14])
+        self.assertEqual(int(val), 1, "tortuosity of a line should be close to 1")
