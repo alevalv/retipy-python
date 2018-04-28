@@ -38,7 +38,7 @@ RUN pip --no-cache-dir install --upgrade pip && \
 
 ENV RETIPY_HOME /home/retipy/src
 
-RUN git clone -b feature/json git://github.com/alevalv/retipy.git /opt/retipy && \
+RUN git clone git://github.com/alevalv/retipy.git /opt/retipy && \
     pip install -e /opt/retipy/src/ && \
     mkdir ${RETIPY_HOME} && \
     cp /opt/retipy/src/*.py ${RETIPY_HOME} && \
