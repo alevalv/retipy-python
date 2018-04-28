@@ -4,7 +4,7 @@ retipy
 [![Coverage Status](https://codecov.io/gh/alevalv/retipy/branch/master/graph/badge.svg)](https://codecov.io/gh/alevalv/retipy)
 
 The goal of this project is to create a python library to perform different operations on fundus retinal images.
-The goal is to have vessel segmentation, vessel identification and tortuosity measures.
+The goal is to have vessel segmentation, vessel identification and tortuosity measures available as a REST endpoints.
 
 Currently a work in progress.
 
@@ -25,6 +25,7 @@ The library is also available as a docker container at [alevalv/retipy](https://
 ```bash
 docker pull alevalv/retipy:latest
 ```
+By default, the docker image will expose a REST endpoint in port 5000.
 
 License
 -------
