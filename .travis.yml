@@ -5,11 +5,11 @@ install:
 # build dependencies
   - pip install numpy matplotlib pillow scikit-image scipy h5py scikit-learn flask
 # test dependencies
-  - pip install coveralls
+  - pip install codecov
   - pip install pytest pytest-cov
 
 script:
   - pytest -v src/test/ --cov=retipy --cov-report term-missing
 
 after_success:
-  coveralls
+  codecov
