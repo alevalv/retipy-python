@@ -18,9 +18,10 @@
 
 import math
 import numpy as np
-from lib import fractal_dimension, smoothing
-from retipy import math as m
+from lib import fractal_dimension
+from retipy import util as m
 from retipy.retina import Retina, Window, detect_vessel_border
+from retipy.util import curve_to_image
 from scipy.interpolate import CubicSpline
 
 
@@ -76,43 +77,6 @@ def _detect_inflection_points(x, y):
         if np.sign(cf[iterator]) != np.sign(cf[iterator - 1]):
             inflection_points.append(iterator - 1)
     return inflection_points
-
-
-def _curve_to_image(x, y):
-    # get the maximum and minimum x and y values
-    mm_values = np.empty([2, 2], dtype=np.int)
-    mm_values[0, :] = 99999999999999
-    mm_values[1, :] = -99999999999999
-    for i in range(0, len(x)):
-        if x[i] < mm_values[0, 0]:
-            mm_values[0, 0] = x[i]
-        if x[i] > mm_values[1, 0]:
-            mm_values[1, 0] = x[i]
-        if y[i] < mm_values[0, 1]:
-            mm_values[0, 1] = y[i]
-        if y[i] > mm_values[1, 1]:
-            mm_values[1, 1] = y[i]
-    distance_x = mm_values[1, 0] - mm_values[0, 0]
-    distance_y = mm_values[1, 1] - mm_values[0, 1]
-    # calculate which square with side 2^n of size will contain the line
-    image_dim = 2
-    while image_dim < distance_x or image_dim < distance_y:
-        image_dim *= 2
-    image_dim *= 2
-    # values to center the
-    padding_x = (mm_values[1, 0] - mm_values[0, 0]) // 2
-    padding_y = (mm_values[1, 1] - mm_values[0, 1]) // 2
-
-    image_curve = np.full([image_dim, image_dim], False)
-
-    for i in range(0, len(x)):
-        x[i] = x[i] - mm_values[0, 0]
-        y[i] = y[i] - mm_values[0, 1]
-
-    for i in range(0, len(x)):
-        image_curve[x[i], y[i]] = True
-
-    return Retina(image_curve, "curve_image")
 
 
 def linear_regression_tortuosity(x, y, sampling_size=6, retry=True):
@@ -215,7 +179,7 @@ def fractal_tortuosity(retinal_image: Retina):
 
 
 def fractal_tortuosity_curve(x, y):
-    image = _curve_to_image(x, y)
+    image = curve_to_image(x, y)
     return fractal_dimension.fractal_dimension(image.np_image)
 
 

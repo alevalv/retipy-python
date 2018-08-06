@@ -17,30 +17,30 @@
 """tests for tortuosity module"""
 
 from unittest import TestCase
-from retipy import math
+from retipy import util
 
 
-class TestMath(TestCase):
+class TestUtil(TestCase):
     def test_derivative1_forward_h2(self):
         self.assertEqual(
-            math.derivative1_forward_h2(0, [1, 2, 3]),
+            util.derivative1_forward_h2(0, [1, 2, 3]),
             1.0,
             "first derivative does not match")
 
     def test_derivative1_forward_h2_error(self):
-        self.assertRaises(ValueError, math.derivative1_forward_h2, 0, [])
+        self.assertRaises(ValueError, util.derivative1_forward_h2, 0, [])
 
     def test_derivative1_centered_h1(self):
         self.assertEqual(
-            math.derivative1_centered_h1(1, [1, 2, 3]),
+            util.derivative1_centered_h1(1, [1, 2, 3]),
             1.0,
             "first derivative does not match")
 
     def test_derivative1_centered_h1_error(self):
-        self.assertRaises(ValueError, math.derivative1_centered_h1, 0, [])
+        self.assertRaises(ValueError, util.derivative1_centered_h1, 0, [])
 
     def test_derivative2_centered_h1(self):
-        self.assertEqual(math.derivative2_centered_h1(1, [1, 2, 3]), 0, "second derivative does not match")
+        self.assertEqual(util.derivative2_centered_h1(1, [1, 2, 3]), 0, "second derivative does not match")
 
     def test_derivative2_centered_h1_error(self):
-        self.assertRaises(ValueError, math.derivative2_centered_h1, 0, [])
+        self.assertRaises(ValueError, util.derivative2_centered_h1, 0, [])

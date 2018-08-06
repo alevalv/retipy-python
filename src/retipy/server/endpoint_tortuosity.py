@@ -38,7 +38,12 @@ def post_tortuosity_density():
     if flask.request.method == "POST":
         json = flask.request.get_json(silent=True)
         if json is not None:  # pragma: no cover
-            image = base64.b64decode(json["image"])
+            split = json["image"].split(',')
+            if len(split) == 2:
+                image_data = split[1]
+            else:
+                image_data = json["image"]
+            image = base64.b64decode(image_data)
             image = Image.open(io.BytesIO(image)).convert('L')
             data = tortuosity.density(np.array(image))
     return flask.jsonify(data)
@@ -51,7 +56,13 @@ def post_tortuosity_fractal():
     if flask.request.method == "POST":
         json = flask.request.get_json(silent=True)
         if json is not None:  # pragma: no cover
-            image = base64.b64decode(json["image"])
+            split = json["image"].split(',')
+            if len(split) == 2:
+                image_data = split[1]
+            else:
+                image_data = json["image"]
+            image = base64.b64decode(image_data)
             image = Image.open(io.BytesIO(image)).convert('L')
             data = tortuosity.fractal(np.array(image))
+            print(data)
     return flask.jsonify(data)

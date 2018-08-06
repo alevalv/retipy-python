@@ -26,7 +26,8 @@ from matplotlib import pyplot as plt
 from os import path
 from PIL import Image
 from scipy import ndimage
-from skimage import color, feature, filters, io
+from skimage import color, feature, filters, io, morphology
+from retipy import util
 
 
 class Retina(object):
@@ -71,6 +72,7 @@ class Retina(object):
         """Applies a thresholding algorithm to the contained image."""
         threshold = filters.threshold_mean(self.np_image)
         self.np_image = self.np_image > threshold
+        self.segmented = True
         self.depth = 1
 
     def detect_edges_canny(self, min_val=0, max_val=1):
@@ -101,6 +103,18 @@ class Retina(object):
         """
         self._copy()
         self.np_image = ndimage.binary_dilation(self.np_image, iterations=times)
+
+    def skeletonize_1(self):
+        """
+        Uses the algorithm defined in scikit.morphology.medial_axis to skeletonise the image.
+        Results are worse than Zhang-Suen
+        """
+        self._copy()
+        if self.segmented:
+            self.np_image = morphology.medial_axis(self.np_image)
+
+##################################################################################################
+# I/O functions
 
     def reshape_square(self):
         """
@@ -147,9 +161,6 @@ class Retina(object):
                 current_value = current_value // 2
                 sizes.append(current_value)
         return sizes
-
-##################################################################################################
-# I/O functions
 
     def _copy(self):
         self.old_image = copy(self.np_image)
@@ -402,41 +413,6 @@ def detect_vessel_border(image: Retina, ignored_pixels=1):
     :param ignored_pixels: how many pixels will be ignored from borders.
     """
 
-    def neighbours(pixel, window):  # pragma: no cover
-        """
-        Creates a list of the neighbouring pixels for the given one. It will only
-        add to the list if the pixel has value.
-
-        :param pixel: the pixel position to extract its neighbours
-        :param window:  the window with the pixels information
-        :return: a list of pixels (list of tuples)
-        """
-        x_less = max(0, pixel[0] - 1)
-        y_less = max(0, pixel[1] - 1)
-        x_more = min(window.shape[0] - 1, pixel[0] + 1)
-        y_more = min(window.shape[1] - 1, pixel[1] + 1)
-
-        active_neighbours = []
-
-        if window.np_image[x_less, y_less] > 0:
-            active_neighbours.append([x_less, y_less])
-        if window.np_image[x_less, pixel[1]] > 0:
-            active_neighbours.append([x_less, pixel[1]])
-        if window.np_image[x_less, y_more] > 0:
-            active_neighbours.append([x_less, y_more])
-        if window.np_image[pixel[0], y_less] > 0:
-            active_neighbours.append([pixel[0], y_less])
-        if window.np_image[pixel[0], y_more] > 0:
-            active_neighbours.append([pixel[0], y_more])
-        if window.np_image[x_more, y_less] > 0:
-            active_neighbours.append([x_more, y_less])
-        if window.np_image[x_more, pixel[1]] > 0:
-            active_neighbours.append([x_more, pixel[1]])
-        if window.np_image[x_more, y_more] > 0:
-            active_neighbours.append([x_more, y_more])
-
-        return active_neighbours
-
     def vessel_extractor(window, start_x, start_y):
         """
         Extracts a vessel using adjacent points, when each point is extracted is deleted from the
@@ -451,7 +427,7 @@ def detect_vessel_border(image: Retina, ignored_pixels=1):
                 window.np_image[pixel[0], pixel[1]] = 0
 
                 # add the neighbours with value to pending list:
-                pending_pixels.extend(neighbours(pixel, window))
+                pending_pixels.extend(util.neighbours(pixel, window))
 
         # sort by x position
         vessel.sort(key=lambda item: item[0])

@@ -46,7 +46,7 @@ def density(
         {
             "uri": "tortuosity_density",
             "data": [],
-            # "image": image.original_base64  # TODO: maybe return a processed image?
+            "image": image.original_base64  # TODO: maybe return a processed image?
         }
 
     for i in range(0, windows.shape[0]):
