@@ -3,7 +3,7 @@ python: "3.6"
 
 install:
 # build dependencies
-  - pip install numpy matplotlib pillow scikit-image scipy h5py scikit-learn flask
+  - pip install numpy matplotlib pillow scikit-image scipy h5py scikit-learn flask opencv-python
 # test dependencies
   - pip install codecov
   - pip install pytest pytest-cov

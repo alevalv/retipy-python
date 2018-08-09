@@ -167,6 +167,47 @@ class Retina_grayscale(object):
         self.np_image = abs(self.IH - 255)
         self.top_hat(40)
 
+    def double_segmentation(self):
+        # print("Ecualizando histograma")
+        self.equalize_histogram()
+        # print("Borrando reflejo central")
+        self.opening(12)
+        # print("Corrigiendo sombras")
+        self.shadow_correction()
+        # print("Homogenizando selfn")
+        self.homogenize()
+        # print("Aplicando threshold")
+        IH = cv2.GaussianBlur(self.IH, (3, 3), 1.72).astype(np.uint8)
+        ret, normal_vessels_segmentation = cv2.threshold(IH, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        normal_vessels_segmentation = abs(255 - normal_vessels_segmentation)
+        tiny_vessels_segmentation = cv2.adaptiveThreshold(IH, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                                          cv2.THRESH_BINARY, 13, 2)
+        tiny_vessels_segmentation = abs(255 - tiny_vessels_segmentation)
+        # print(tiny_vessels_segmentation.dtype)
+
+        # print("Borrando ruido")
+
+        _, npaContours, hierarchy = cv2.findContours(normal_vessels_segmentation, cv2.RETR_TREE,
+                                                     cv2.CHAIN_APPROX_SIMPLE)
+        for npaContour in npaContours:
+            if (cv2.contourArea(npaContour) < 150):
+                cv2.drawContours(normal_vessels_segmentation, [npaContour], -1, (0, 0, 0), -1)
+
+        _, npaContours, hierarchy = cv2.findContours(tiny_vessels_segmentation, cv2.RETR_TREE,
+                                                     cv2.CHAIN_APPROX_SIMPLE)
+        for npaContour in npaContours:
+            if (cv2.contourArea(npaContour) < 150):
+                cv2.drawContours(tiny_vessels_segmentation, [npaContour], -1, (0, 0, 0), -1)
+
+        final_vessels_segmentation = tiny_vessels_segmentation.astype(
+            np.float) + normal_vessels_segmentation.astype(
+            np.float)
+        k = final_vessels_segmentation >= 1
+        final_vessels_segmentation[k] = 255
+        k2 = final_vessels_segmentation <= 0
+        final_vessels_segmentation[k2] = 0
+        return final_vessels_segmentation
+
 ##################################################################################################
 # I/O functions
 
