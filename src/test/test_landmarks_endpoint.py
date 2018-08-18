@@ -25,7 +25,7 @@ from unittest import TestCase
 
 class TestLandmarksEndpoint(TestCase):
     _resources = 'src/resources/images/'
-    _image_file_name = 'img01.png'
+    _image_file_name = 'img02.png'
     _image_path = _resources + _image_file_name
 
     def setUp(self):

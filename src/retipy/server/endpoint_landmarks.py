@@ -30,10 +30,10 @@ from retipy.server import base_url
 
 landmarks_url = base_url + "landmarks/"
 
+
 @app.route(landmarks_url + "classification", methods=["POST"])
 def post_landmarks_classification():
-    bifurcations_data = {"success": False}
-    crossings_data = {"success": False}
+    data = {"success": False}
 
     if flask.request.method == "POST":
         json = flask.request.get_json(silent=True)
@@ -41,4 +41,5 @@ def post_landmarks_classification():
             image = base64.b64decode(json["image"])
             image = Image.open(io.BytesIO(image)).convert('L')
             bifurcations_data, crossings_data = landmarks.classification(np.array(image))
-    return flask.jsonify(bifurcations=bifurcations_data, crossings=crossings_data)
+            data = {"Bifurcations": bifurcations_data, "Crossings": crossings_data}
+    return flask.jsonify(data)

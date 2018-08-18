@@ -183,9 +183,9 @@ def boxes_auxiliary(skeleton: np.ndarray, landmarks: list, bifurcations_coordina
     landmarks = [val for val in landmarks if val not in box]
 
     if num_bifurcations > num_crossings:
-        bifurcations_coordinates.append([(y - 3, x - 3), (y + 3, x + 3)])
+        bifurcations_coordinates.append([y - 3, x - 3, y + 3, x + 3])
     else:
-        crossings_coordinates.append([(y - 3, x - 3), (y + 3, x + 3)])
+        crossings_coordinates.append([y - 3, x - 3, y + 3, x + 3])
 
     return landmarks
 

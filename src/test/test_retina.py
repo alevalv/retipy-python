@@ -141,9 +141,9 @@ class TestRetina(TestCase):
     def test_bin_to_bgr(self):
         h, w = self.image.shape
         image_bgr = np.zeros((h, w, 3))
-        image_bgr[:, :, 0] = self.np_image
-        image_bgr[:, :, 1] = self.np_image
-        image_bgr[:, :, 2] = self.np_image
+        image_bgr[:, :, 0] = self.image.np_image
+        image_bgr[:, :, 1] = self.image.np_image
+        image_bgr[:, :, 2] = self.image.np_image
         self.image.bin_to_bgr()
         assert_array_equal(image_bgr, self.image.np_image)
 
