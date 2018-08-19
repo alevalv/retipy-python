@@ -100,13 +100,13 @@ class TestRetinaGrayscale(TestCase):
     def test_shadow_correction(self):
         self.image.shadow_correction()
         original_image = retina_grayscale.Retina_grayscale(None, _shadow_correction_path)
-        assert_array_equal(self.image.np_image, original_image.np_image)
+        assert_array_equal(self.image.np_image.astype(np.uint8), original_image.np_image)
 
     def test_homogenize(self):
         self.image.shadow_correction()
         self.image.homogenize()
         original_image = retina_grayscale.Retina_grayscale(None, _homogenize_path)
-        assert_array_equal(self.image.np_image, original_image.np_image)
+        assert_array_equal(self.image.np_image.astype(np.uint8), original_image.np_image)
 
     def test_vessel_enhancement(self):
         self.image.homogenize()
