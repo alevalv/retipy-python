@@ -40,5 +40,6 @@ def post_segmentation_double_segmentation():
         if json is not None:  # pragma: no cover
             image = base64.b64decode(json["image"])
             image = Image.open(io.BytesIO(image))
-            data = segment(image)
+            retina = retina_grayscale.Retina_grayscale(np.array(image), None)
+            data = retina.double_segmentation()
     return flask.jsonify(data)

@@ -167,48 +167,102 @@ class Retina_grayscale(object):
         self.np_image = abs(self.IH - 255)
         self.top_hat(40)
 
-    def double_segmentation(self):
-        # print("Ecualizando histograma")
-        self.equalize_histogram()
-        # print("Borrando reflejo central")
-        self.opening(12)
-        # print("Corrigiendo sombras")
+    def normal_vessels_segmentation(self):
         self.shadow_correction()
-        # print("Homogenizando selfn")
         self.homogenize()
-        # print("Aplicando threshold")
         IH = cv2.GaussianBlur(self.IH, (3, 3), 1.72).astype(np.uint8)
-        ret, normal_vessels_segmentation = cv2.threshold(IH, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        normal_vessels_segmentation = abs(255 - normal_vessels_segmentation)
-        tiny_vessels_segmentation = cv2.adaptiveThreshold(IH, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                                          cv2.THRESH_BINARY, 13, 2)
+        ret, normal_vessels_segmentation = cv2.threshold(IH, 0, 255, cv2.THRESH_OTSU)
+        return abs(255 - normal_vessels_segmentation)
+
+    def tiny_vessels_segmentation(self):
+        self.equalize_histogram()
+        self.opening(9)
+        self.shadow_correction()
+        self.homogenize()
+        IH = cv2.GaussianBlur(self.IH, (3, 3), 1.72).astype(np.uint8)
+        tiny_vessels_segmentation = cv2.adaptiveThreshold(IH, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 13, 2)
         tiny_vessels_segmentation = abs(255 - tiny_vessels_segmentation)
-        # print(tiny_vessels_segmentation.dtype)
+        kernel = np.ones((3, 3), np.uint8)
+        tiny_vessels_segmentation = cv2.erode(tiny_vessels_segmentation, kernel, iterations=1)
 
-        # print("Borrando ruido")
-
-        _, npaContours, hierarchy = cv2.findContours(normal_vessels_segmentation, cv2.RETR_TREE,
-                                                     cv2.CHAIN_APPROX_SIMPLE)
+        _, npaContours, hierarchy = cv2.findContours(tiny_vessels_segmentation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         for npaContour in npaContours:
-            if (cv2.contourArea(npaContour) < 150):
-                cv2.drawContours(normal_vessels_segmentation, [npaContour], -1, (0, 0, 0), -1)
-
-        _, npaContours, hierarchy = cv2.findContours(tiny_vessels_segmentation, cv2.RETR_TREE,
-                                                     cv2.CHAIN_APPROX_SIMPLE)
-        for npaContour in npaContours:
-            if (cv2.contourArea(npaContour) < 150):
+            if (cv2.contourArea(npaContour) < 100):  # 100
                 cv2.drawContours(tiny_vessels_segmentation, [npaContour], -1, (0, 0, 0), -1)
 
-        final_vessels_segmentation = tiny_vessels_segmentation.astype(
-            np.float) + normal_vessels_segmentation.astype(
-            np.float)
+        kernel = np.ones((3, 3), np.uint8)
+        tiny_vessels_segmentation = cv2.dilate(tiny_vessels_segmentation, kernel, iterations=1)
+        return tiny_vessels_segmentation
+
+    def post_processing(self, final_vessels_segmentation):
+        kernel = np.ones((3, 3), np.uint8)
+        final_vessels_segmentation = cv2.dilate(final_vessels_segmentation, kernel, iterations=1)
+        final_vessels_segmentation = abs(255 - final_vessels_segmentation)
+
+        _, npaContours, hierarchy = cv2.findContours(final_vessels_segmentation.astype(np.uint8), cv2.RETR_TREE,
+                                                     cv2.CHAIN_APPROX_SIMPLE)
+        for npaContour in npaContours:
+            (x, y), radius = cv2.minEnclosingCircle(npaContour)
+            if (radius < 50):
+                center = (int(x), int(y))
+                # cv2.circle(final_vessels_segmentation, center, int(radius), (0, 0, 0), 2)
+                cv2.drawContours(final_vessels_segmentation, [npaContour], -1, (255, 255, 255), -1)
+
+        final_vessels_segmentation = abs(255 - final_vessels_segmentation)
+
+        _, npaContours, hierarchy = cv2.findContours(final_vessels_segmentation.astype(np.uint8), cv2.RETR_TREE,
+                                                     cv2.CHAIN_APPROX_SIMPLE)
+        for npaContour in npaContours:
+            (x, y), radius = cv2.minEnclosingCircle(npaContour)
+            if (radius < 20):
+                center = (int(x), int(y))
+                # cv2.circle(final_vessels_segmentation, center, int(radius), (0, 0, 0), 2)
+                cv2.drawContours(final_vessels_segmentation, [npaContour], -1, (255, 255, 255), -1)
+
+        cv2.pyrUp(final_vessels_segmentation, final_vessels_segmentation)
+        for i in range(0, 6):
+            final_vessels_segmentation = cv2.medianBlur(final_vessels_segmentation.astype(np.uint8), 5)
+
+        cv2.pyrDown(final_vessels_segmentation, final_vessels_segmentation)
+        np.savetxt("as.csv", final_vessels_segmentation, fmt="%i")
+
+        kernel = np.ones((3, 3), np.uint8)
+        final_vessels_segmentation = cv2.erode(final_vessels_segmentation, kernel, iterations=1)
+        return final_vessels_segmentation
+
+    def double_segmentation(self):
+        normal_vessels_segmentation = self.normal_vessels_segmentation()
+        self.np_image = self.original_image
+        tiny_vessels_segmentation = self.tiny_vessels_segmentation()
+
+        final_vessels_segmentation = tiny_vessels_segmentation.astype(np.float) + normal_vessels_segmentation.astype(np.float)
         k = final_vessels_segmentation >= 1
         final_vessels_segmentation[k] = 255
         k2 = final_vessels_segmentation <= 0
         final_vessels_segmentation[k2] = 0
+        final_vessels_segmentation = self.post_processing(final_vessels_segmentation)
         return final_vessels_segmentation
 
-##################################################################################################
+    def calculate_roc(self, image, result):
+        true_positive = 0
+        true_negative = 0
+        false_positive = 0
+        false_negative = 0
+        for i in range(0, result.shape[0]):
+            for j in range(0, result.shape[1]):
+                if (self.mask[i, j] == 1):
+                    if (image[i, j] == 1 and result[i, j] == 1):
+                        true_positive += 1
+                    elif (image[i, j] == 0 and result[i, j] == 0):
+                        true_negative += 1
+                    elif (image[i, j] == 1 and result[i, j] == 0):
+                        false_positive += 1
+                    elif (image[i, j] == 0 and result[i, j] == 1):
+                        false_negative += 1
+        self.roc[0, :] = [true_positive, true_negative, false_positive, false_negative,
+                          (true_positive + true_negative + false_positive + false_negative)]
+
+    ##################################################################################################
 # I/O functions
 
     def _copy(self):
@@ -240,12 +294,4 @@ class Retina_grayscale(object):
         io.imshow(self.np_image)
         plt.show()
 
-    def compare_with(self, retinal_image):
-        """
-        Returns the difference between the given image and the stored one.
-
-        :param retinal_image: the image to compare with
-        :return:  a new Retina object with the differences
-        """
-        return Retina_grayscale(self.np_image - retinal_image.np_image, "diff" + self.filename)
 
