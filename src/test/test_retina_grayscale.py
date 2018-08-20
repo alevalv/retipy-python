@@ -142,4 +142,4 @@ class TestRetinaGrayscale(TestCase):
         double_segmentation = self.image.double_segmentation()
         original_image = retina_grayscale.Retina_grayscale(None, _manual_result_path)
         self.image.calculate_roc(double_segmentation/255, original_image.np_image/255)
-        assert_array_equal(self.image.roc, [[ 632559., 5983149.,   97407.,  201328., 6914443.]])
+        assert_array_equal(self.image.roc, [[ 632657., 5985311.,  100128.,  201231., 6919327.]])

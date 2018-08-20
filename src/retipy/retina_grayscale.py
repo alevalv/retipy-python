@@ -62,7 +62,7 @@ class Retina_grayscale(object):
         self.shape = self.np_image.shape
         self.original_image = self.np_image
 
-        self.mask = self.np_image <= 15
+        self.mask = self.np_image <= 5
         self.mask = abs(1-self.mask)
 
         self.segmented = False
@@ -174,6 +174,7 @@ class Retina_grayscale(object):
         ret, normal_vessels_segmentation = cv2.threshold(IH, 0, 255, cv2.THRESH_OTSU)
         return abs(255 - normal_vessels_segmentation)
 
+
     def tiny_vessels_segmentation(self):
         self.equalize_histogram()
         self.opening(9)
@@ -224,7 +225,6 @@ class Retina_grayscale(object):
             final_vessels_segmentation = cv2.medianBlur(final_vessels_segmentation.astype(np.uint8), 5)
 
         cv2.pyrDown(final_vessels_segmentation, final_vessels_segmentation)
-        np.savetxt("as.csv", final_vessels_segmentation, fmt="%i")
 
         kernel = np.ones((3, 3), np.uint8)
         final_vessels_segmentation = cv2.erode(final_vessels_segmentation, kernel, iterations=1)
@@ -241,6 +241,7 @@ class Retina_grayscale(object):
         k2 = final_vessels_segmentation <= 0
         final_vessels_segmentation[k2] = 0
         final_vessels_segmentation = self.post_processing(final_vessels_segmentation)
+
         return final_vessels_segmentation
 
     def calculate_roc(self, image, result):
