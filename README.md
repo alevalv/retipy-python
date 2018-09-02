@@ -1,7 +1,7 @@
-retipy
+retipy-python
 ======
-[![Build Status](https://travis-ci.org/alevalv/retipy.svg?branch=master)](https://travis-ci.org/alevalv/retipy)
-[![Coverage Status](https://codecov.io/gh/alevalv/retipy/branch/master/graph/badge.svg)](https://codecov.io/gh/alevalv/retipy)
+[![Build Status](https://travis-ci.org/alevalv/retipy.svg?branch=master)](https://travis-ci.org/alevalv/retipy-python)
+[![Coverage Status](https://codecov.io/gh/alevalv/retipy/branch/master/graph/badge.svg)](https://codecov.io/gh/alevalv/retipy-python)
 
 The goal of this project is to create a python library to perform different operations on fundus retinal images.
 The goal is to have vessel segmentation, vessel identification and tortuosity measures available as a REST endpoints.
@@ -21,9 +21,9 @@ pip install --user -e .
 This command should be ran inside the src folder that contains the retipy folder. It will make the retipy
 library available to the user that ran it.
 ### Docker
-The library is also available as a docker container at [alevalv/retipy](https://hub.docker.com/r/alevalv/retipy/):
+The library is also available as a docker container at [alevalv/retipy-python](https://hub.docker.com/r/alevalv/retipy-python/):
 ```bash
-docker pull alevalv/retipy:latest
+docker pull alevalv/retipy-python:latest
 ```
 By default, the docker image will expose a REST endpoint in port 5000.
 
