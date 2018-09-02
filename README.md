@@ -1,7 +1,7 @@
 retipy-python
 ======
-[![Build Status](https://travis-ci.org/alevalv/retipy.svg?branch=master)](https://travis-ci.org/alevalv/retipy-python)
-[![Coverage Status](https://codecov.io/gh/alevalv/retipy/branch/master/graph/badge.svg)](https://codecov.io/gh/alevalv/retipy-python)
+[![Build Status](https://travis-ci.org/alevalv/retipy-python.svg?branch=master)](https://travis-ci.org/alevalv/retipy-python)
+[![Coverage Status](https://codecov.io/gh/alevalv/retipy-python/branch/master/graph/badge.svg)](https://codecov.io/gh/alevalv/retipy-python)
 
 The goal of this project is to create a python library to perform different operations on fundus retinal images.
 The goal is to have vessel segmentation, vessel identification and tortuosity measures available as a REST endpoints.
