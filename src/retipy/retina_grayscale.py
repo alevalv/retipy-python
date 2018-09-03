@@ -22,6 +22,7 @@ import numpy as np
 import warnings
 import cv2
 from io import BytesIO
+
 from scipy import ndimage
 from skimage import io
 from matplotlib import pyplot as plt
@@ -58,6 +59,8 @@ class Retina_grayscale(object):
             self._file_name = image_path
 
         self.np_image = self.np_image[:, :, 1]
+        if(self.np_image.shape[0] == 3328):
+            self.np_image[3270:3328, :] = 0
         self.old_image = None
         self.shape = self.np_image.shape
         self.original_image = self.np_image
@@ -128,6 +131,7 @@ class Retina_grayscale(object):
         """Applies the following filters: mean filter with a 3x3 kernel, Gaussian filter with a kernel of 9x9
         and sigma of 1.82, and a median filter with a 60x60 kernel. The resulting image is subtracted with the
         original image and finally the values obtained from the subtraction are moved to the 256 possible grayscale values"""
+
         self._copy()
         minuendo = np.copy(self.np_image)
         self.mean_filter(11)
@@ -172,23 +176,29 @@ class Retina_grayscale(object):
         self.homogenize()
         IH = cv2.GaussianBlur(self.IH, (3, 3), 1.72).astype(np.uint8)
         ret, normal_vessels_segmentation = cv2.threshold(IH, 0, 255, cv2.THRESH_OTSU)
+        ret, normal_vessels_segmentation = cv2.threshold(IH, 0, 255, cv2.THRESH_OTSU)
+        _, npaContours, hierarchy = cv2.findContours(normal_vessels_segmentation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        for npaContour in npaContours:
+            if (cv2.contourArea(npaContour) < 5000):  # 100
+                cv2.drawContours(normal_vessels_segmentation, [npaContour], -1, (255, 255, 255), -1)
         return abs(255 - normal_vessels_segmentation)
 
 
     def tiny_vessels_segmentation(self):
         self.equalize_histogram()
-        self.opening(9)
+        self.opening(9)#13
         self.shadow_correction()
         self.homogenize()
+
         IH = cv2.GaussianBlur(self.IH, (3, 3), 1.72).astype(np.uint8)
-        tiny_vessels_segmentation = cv2.adaptiveThreshold(IH, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 13, 2)
+        tiny_vessels_segmentation = cv2.adaptiveThreshold(IH, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 13, 2)#13
         tiny_vessels_segmentation = abs(255 - tiny_vessels_segmentation)
         kernel = np.ones((3, 3), np.uint8)
         tiny_vessels_segmentation = cv2.erode(tiny_vessels_segmentation, kernel, iterations=1)
 
         _, npaContours, hierarchy = cv2.findContours(tiny_vessels_segmentation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         for npaContour in npaContours:
-            if (cv2.contourArea(npaContour) < 100):  # 100
+            if (cv2.contourArea(npaContour) < 100):  # 250
                 cv2.drawContours(tiny_vessels_segmentation, [npaContour], -1, (0, 0, 0), -1)
 
         kernel = np.ones((3, 3), np.uint8)
@@ -204,7 +214,7 @@ class Retina_grayscale(object):
                                                      cv2.CHAIN_APPROX_SIMPLE)
         for npaContour in npaContours:
             (x, y), radius = cv2.minEnclosingCircle(npaContour)
-            if (radius < 50):
+            if (radius < 70):
                 center = (int(x), int(y))
                 # cv2.circle(final_vessels_segmentation, center, int(radius), (0, 0, 0), 2)
                 cv2.drawContours(final_vessels_segmentation, [npaContour], -1, (255, 255, 255), -1)
@@ -241,7 +251,6 @@ class Retina_grayscale(object):
         k2 = final_vessels_segmentation <= 0
         final_vessels_segmentation[k2] = 0
         final_vessels_segmentation = self.post_processing(final_vessels_segmentation)
-
         return final_vessels_segmentation
 
     def calculate_roc(self, image, result):

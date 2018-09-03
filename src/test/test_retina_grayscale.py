@@ -29,13 +29,13 @@ from retipy import retina_grayscale
 _resources = 'src/test/resources/images/'
 _image_file_name = '01_h.jpg'
 _image_path = _resources + _image_file_name
-_shadow_correction_path = _resources + 'shadowCorrection.png'
-_homogenize_path = _resources + 'homogenization.png'
-_normal_vessels_segmentation_path = _resources + 'normalVesselsSegmentation.png'
-_tiny_vessels_segmentation_path = _resources + 'tinyVesselsSegmentation.png'
-_double_vessels_segmentation_path = _resources + 'finalVesselsSegmentation.png'
-_double_vessels_segmentation_without_postprocessing_path = _resources + 'finalVesselsSegmentationWithoutPostProcessing.png'
-_manual_result_path = _resources + 'result.png'
+_shadow_correction_path = _resources + 'shadowCorrection.pgm'
+_homogenize_path = _resources + 'homogenization.pgm'
+_normal_vessels_segmentation_path = _resources + 'normalVesselsSegmentation.pgm'
+_tiny_vessels_segmentation_path = _resources + 'tinyVesselsSegmentation.pgm'
+_double_vessels_segmentation_path = _resources + 'finalVesselsSegmentation.pgm'
+_postprocessing_path = _resources + 'postProcessing.pgm'
+_manual_result_path = _resources + 'result.pgm'
 
 
 
@@ -128,9 +128,9 @@ class TestRetinaGrayscale(TestCase):
         assert_array_equal(normal_segmentation, original_image.np_image)
 
     def test_post_processing(self):
-        self.image = retina_grayscale.Retina_grayscale(None, _double_vessels_segmentation_without_postprocessing_path)
-        result = self.image.post_processing(self.image.np_image)
-        original_image = retina_grayscale.Retina_grayscale(None, _double_vessels_segmentation_path)
+        img = self.image.normal_vessels_segmentation()
+        result = self.image.post_processing(img)
+        original_image = retina_grayscale.Retina_grayscale(None, _postprocessing_path)
         assert_array_equal(result, original_image.np_image)
 
     def test_double_vessels_segmentation(self):
@@ -139,7 +139,7 @@ class TestRetinaGrayscale(TestCase):
         assert_array_equal(double_segmentation, original_image.np_image)
 
     def test_calculate_roc(self):
-        double_segmentation = self.image.double_segmentation()
+        double_segmentation = self.image.normal_vessels_segmentation()
         original_image = retina_grayscale.Retina_grayscale(None, _manual_result_path)
         self.image.calculate_roc(double_segmentation/255, original_image.np_image/255)
-        assert_array_equal(self.image.roc, [[ 632657., 5985311.,  100128.,  201231., 6919327.]])
+        assert_array_equal(self.image.roc, [[ 509509., 6034990.,   50449. , 324379., 6919327.]])
