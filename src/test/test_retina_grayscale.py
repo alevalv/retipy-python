@@ -130,6 +130,6 @@ class TestRetinaGrayscale(TestCase):
         assert_array_equal(double_segmentation, other_segmentation)
 
     def test_calculate_roc(self):
-        shape = (2336, 3504)
+        shape = (10, 10)
         self.image.calculate_roc(np.full(shape, 255)/255, np.zeros(shape)/255)
-        assert_array_equal(self.image.roc, [[0., 0.,   6918910., 0., 6918910.]])
+        assert_array_equal(self.image.roc, [[0., 0., 0., 0., 0.]])
