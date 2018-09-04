@@ -27,6 +27,7 @@ from os import path
 from PIL import Image
 from scipy import ndimage
 from skimage import color, feature, filters, io
+from skimage.morphology import skeletonize
 
 
 class Retina(object):
@@ -147,6 +148,27 @@ class Retina(object):
                 current_value = current_value // 2
                 sizes.append(current_value)
         return sizes
+
+    def skeletonization(self):
+        """Applies a skeletonization algorithm to the contained image."""
+        self.np_image = skeletonize(self.np_image)
+
+    def bin_to_bgr(self):
+        """Transform the image to a ndarray with depth:3"""
+        h, w = self.np_image.shape
+        image_bgr = np.zeros((h, w, 3))
+        image_bgr[:, :, 0] = self.np_image
+        image_bgr[:, :, 1] = self.np_image
+        image_bgr[:, :, 2] = self.np_image
+        self.np_image = image_bgr
+
+    def get_uint_image(self):
+        """
+        Returns the np_image converted to uint8 and multiplied by 255 to simulate grayscale
+        :return: a ndarray image
+        """
+        image = self.np_image.astype(np.uint8) * 255
+        return image
 
 ##################################################################################################
 # I/O functions

@@ -23,6 +23,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 from scipy import ndimage
 from skimage import color, filters, io
+from skimage.morphology import skeletonize
 
 from retipy import retina
 
@@ -129,6 +130,27 @@ class TestRetina(TestCase):
         print(self.image.shape)
         self.assertEqual(self.image.shape[0] % 32, 0, "modulo should be zero after reshape")
         self.assertEqual(self.image.shape[1] % 32, 0, "modulo should be zero after reshape")
+
+    def test_skeletonization(self):
+        self.image.threshold_image()
+        self.image.skeletonization()
+        original_image = retina.Retina(None, _image_path)
+        original_image.threshold_image()
+        assert_array_equal(self.image.np_image, skeletonize(original_image.np_image))
+
+    def test_bin_to_bgr(self):
+        h, w = self.image.shape
+        image_bgr = np.zeros((h, w, 3))
+        image_bgr[:, :, 0] = self.image.np_image
+        image_bgr[:, :, 1] = self.image.np_image
+        image_bgr[:, :, 2] = self.image.np_image
+        self.image.bin_to_bgr()
+        assert_array_equal(image_bgr, self.image.np_image)
+
+    def test_uint_image(self):
+        image = self.image.np_image.astype(np.uint8) * 255
+        assert_array_equal(image, self.image.get_uint_image())
+
 
 class TestWindow(TestCase):
 
