@@ -97,5 +97,13 @@ class TestLandmarks(TestCase):
         assert_array_equal(result, bifurcations, "Bifurcation points does not match")
         assert_array_equal(result2, crossings, "Crossing points does not match")
 
+    def test_classification(self):
+        bifurcations, crossings = l.classification(self.image.np_image)
+        result = np.genfromtxt("src/test/csv/boxes_bifurcations_test.csv", delimiter=',')
+        result2 = np.genfromtxt("src/test/csv/boxes_crossings_test.csv", delimiter=',')
+
+        assert_array_equal(result, bifurcations, "Bifurcation points does not match")
+        assert_array_equal(result2, crossings, "Crossing points does not match")
+
 
 

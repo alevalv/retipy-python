@@ -81,22 +81,6 @@ def vessel_width(thresholded_image: np.ndarray, landmarks: list):
     return widths
 
 
-def deg2matrix(angle: int):
-    sin = np.sin(angle)
-    if sin > 0:
-        column = np.ceil(sin)
-    else:
-        column = np.floor(sin)
-
-    cos = np.cos(angle)
-    if cos > 0:
-        row = np.ceil(cos)
-    else:
-        row = np.floor(cos)
-
-    return [row, column]
-
-
 def finding_landmark_vessels(widths: list, landmarks: list, skeleton: np.ndarray, skeleton_rgb: np.ndarray):
     vessels = []
     for l in range(0, len(widths)):
