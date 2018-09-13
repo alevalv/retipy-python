@@ -27,7 +27,7 @@ import cv2
 from retipy import retina_grayscale
 
 _resources = 'src/test/resources/images/'
-_image_file_name = '01_h.jpg'
+_image_file_name = 'test_image.pgm'
 _image_path = _resources + _image_file_name
 _shadow_correction_path = _resources + 'shadowCorrection.pgm'
 _homogenize_path = _resources + 'homogenization.pgm'
@@ -142,4 +142,4 @@ class TestRetinaGrayscale(TestCase):
         double_segmentation = self.image.normal_vessels_segmentation()
         original_image = retina_grayscale.Retina_grayscale(None, _manual_result_path)
         self.image.calculate_roc(double_segmentation/255, original_image.np_image/255)
-        assert_array_equal(self.image.roc, [[ 509509., 6034990.,   50449. , 324379., 6919327.]])
+        assert_array_equal(self.image.roc, [[ 848., 603., 0., 0., 1451.]])

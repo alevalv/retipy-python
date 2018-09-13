@@ -70,7 +70,7 @@ class Retina_grayscale(object):
 
         self.segmented = False
         self.segmented_image = np.zeros((self.shape))
-        self.roc = np.zeros((1,5))
+        self.roc = np.zeros((1,5)).astype(np.float)
 
 ##################################################################################################
 # Image Processing functions
@@ -186,7 +186,8 @@ class Retina_grayscale(object):
 
     def tiny_vessels_segmentation(self):
         self.equalize_histogram()
-        self.opening(9)#13
+        self.opening(13)#13
+
         self.shadow_correction()
         self.homogenize()
 
@@ -269,6 +270,7 @@ class Retina_grayscale(object):
                         false_positive += 1
                     elif (image[i, j] == 0 and result[i, j] == 1):
                         false_negative += 1
+        print(true_positive, true_negative, false_positive, false_negative)
         self.roc[0, :] = [true_positive, true_negative, false_positive, false_negative,
                           (true_positive + true_negative + false_positive + false_negative)]
 
