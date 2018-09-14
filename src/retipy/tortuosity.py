@@ -26,8 +26,8 @@ from retipy import retina, tortuosity_measures
 def _tortuosity_window(x1: int, y1: int, x2: int, y2: int, notes: str):
     tw = {}
     tw["notes"] = notes
-    tw["x"] = sorted([x1, x1, x2, x2])
-    tw["y"] = sorted([y1, y2, y2, y1])
+    tw["x"] = [x1, x1, x2, x2]
+    tw["y"] = [y1, y2, y2, y1]
     return tw
 
 
