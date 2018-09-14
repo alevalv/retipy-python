@@ -23,12 +23,11 @@ import numpy as np
 from retipy import retina, tortuosity_measures
 
 
-def _tortuosity_window(x1: int, y1: int, x2: int, y2: int, name: str, description: str):
+def _tortuosity_window(x1: int, y1: int, x2: int, y2: int, notes: str):
     tw = {}
-    tw["name"] = name
-    tw["description"] = description
-    tw["roi_x"] = sorted([x1, x1, x2, x2])
-    tw["roi_y"] = sorted([y1, y2, y2, y1])
+    tw["notes"] = notes
+    tw["x"] = sorted([x1, x1, x2, x2])
+    tw["y"] = sorted([y1, y2, y2, y1])
     return tw
 
 
@@ -63,8 +62,11 @@ def density(
                 tortuosity_density = tortuosity_measures.tortuosity_density(vessel[0], vessel[1])
                 if tortuosity_density > threshold:
                     evaluation["data"].append(_tortuosity_window(
-                        w_pos[0, 0].item(), w_pos[0, 1].item(), w_pos[1, 0].item(), w_pos[1, 1].item(),
-                        "Tortuous", "{0:.2f}".format(tortuosity_density)))
+                        w_pos[0, 0].item(),
+                        w_pos[0, 1].item(),
+                        w_pos[1, 0].item(),
+                        w_pos[1, 1].item(),
+                        "{0:.2f}".format(tortuosity_density)))
 
     return evaluation
 
@@ -100,7 +102,10 @@ def fractal(
                 fractal_tortuosity = tortuosity_measures.fractal_tortuosity_curve(vessel[0], vessel[1])
                 if fractal_tortuosity > threshold:
                     evaluation["data"].append(_tortuosity_window(
-                        w_pos[0, 0].item(), w_pos[0, 1].item(), w_pos[1, 0].item(), w_pos[1, 1].item(),
-                        "Tortuous", "{0:.2f}".format(fractal_tortuosity)))
+                        w_pos[0, 0].item(),
+                        w_pos[0, 1].item(),
+                        w_pos[1, 0].item(),
+                        w_pos[1, 1].item(),
+                        "{0:.2f}".format(fractal_tortuosity)))
 
     return evaluation
