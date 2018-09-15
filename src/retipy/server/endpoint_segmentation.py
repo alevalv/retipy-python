@@ -33,13 +33,13 @@ segmentation_url = base_url + "segmentation/"
 
 @app.route(segmentation_url + "double_segmentation", methods=["POST"])
 def post_segmentation_double_segmentation():
-    data = {"success": False}
+    data = {"success": False} # pragma: no cover
 
-    if flask.request.method == "POST":
+    if flask.request.method == "POST": # pragma: no cover
         json = flask.request.get_json(silent=True)
         if json is not None:  # pragma: no cover
             image = base64.b64decode(json["image"])
             image = Image.open(io.BytesIO(image))
             retina = retina_grayscale.Retina_grayscale(np.array(image), None)
             data = retina.double_segmentation()
-    return flask.jsonify(data)
+    return flask.jsonify(data) # pragma: no cover
