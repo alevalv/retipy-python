@@ -50,6 +50,11 @@ class TestRetinaGrayscale(TestCase):
         """Test the retina constructor when the given path is invalid"""
         self.assertRaises(Exception, retina_grayscale.Retina_grayscale, None, _resources)
 
+    def test_constructor_existing_image(self):
+        """Test the constructor with an existing image"""
+        image = io.imread(_image_path)
+        none_constructor_image = retina_grayscale.Retina_grayscale(image, _image_file_name)
+
     def test_restore_mask(self):
         self.image.np_image[self.image.mask == 0] = 5
         self.image.restore_mask()
@@ -133,5 +138,5 @@ class TestRetinaGrayscale(TestCase):
         double_segmentation = self.image.normal_vessels_segmentation()
         original_image = retina_grayscale.Retina_grayscale(None, _manual_result_path)
         self.image.calculate_roc(double_segmentation/255, original_image.np_image/255)
-        assert_array_equal(self.image.roc, [[ 848., 603., 0., 0., 1451.]])
+        assert_array_equal(self.image.roc, [[ 425.,  304.,  423.,  299., 1451.]])
 

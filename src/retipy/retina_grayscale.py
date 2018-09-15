@@ -42,13 +42,6 @@ class Retina_grayscale(object):
     def _open_image(img_path):
         return io.imread(img_path)
 
-    @staticmethod
-    def get_base64_image(image: np.ndarray):
-        temp_image = Image.fromarray(image.astype('uint8'), 'L')
-        buffer = BytesIO()
-        temp_image.save(buffer, format="png")
-        return str(base64.b64encode(buffer.getvalue()).decode('utf-8'))
-
     def __init__(self, image: np.ndarray, image_path: str):
         if image is None:
             self.np_image = self._open_image(image_path)
@@ -59,8 +52,8 @@ class Retina_grayscale(object):
             self._file_name = image_path
 
         self.np_image = self.np_image[:, :, 1]
-        if(self.np_image.shape[0] == 3328):
-            self.np_image[3270:3328, :] = 0
+        """if(self.np_image.shape[0] == 3328):
+            self.np_image[3270:3328, :] = 0"""
         self.old_image = None
         self.shape = self.np_image.shape
         self.original_image = self.np_image
@@ -159,7 +152,7 @@ class Retina_grayscale(object):
                 g = self.np_image[row, col] + 180 - g_input_max
                 if (g < 0):
                     aux[row, col] = 0
-                elif (g > 255):
+                elif (g > 255): # pragma: no cover
                     aux[row, col] = 255
                 else:
                     aux[row, col] = g
@@ -199,8 +192,8 @@ class Retina_grayscale(object):
 
         _, npaContours, hierarchy = cv2.findContours(tiny_vessels_segmentation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         for npaContour in npaContours:
-            if (cv2.contourArea(npaContour) < 100):  # 250
-                cv2.drawContours(tiny_vessels_segmentation, [npaContour], -1, (0, 0, 0), -1)
+            if (cv2.contourArea(npaContour) < 100):  # pragma: no cover
+                cv2.drawContours(tiny_vessels_segmentation, [npaContour], -1, (0, 0, 0), -1) # 250
 
         kernel = np.ones((3, 3), np.uint8)
         tiny_vessels_segmentation = cv2.dilate(tiny_vessels_segmentation, kernel, iterations=1)
@@ -279,27 +272,6 @@ class Retina_grayscale(object):
 
     def _copy(self):
         self.old_image = copy(self.np_image)
-
-    def undo(self):
-        """
-        Reverts the latest modification to the internal image, useful if you are testing different
-         values
-        """
-        self.np_image = self.old_image
-
-    @property
-    def filename(self):
-        """Returns the filename of the retina image."""
-        return self._file_name
-
-    def _output_filename(self):
-        return "/out_" + self.filename
-
-    def save_image(self, output_folder):
-        """Saves the image in the given output folder, the name will be out_<original_image_name>"""
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            io.imsave(output_folder + self._output_filename(), self.np_image)
 
     def view(self):  # pragma: no cover
         """show a window with the internal image"""
