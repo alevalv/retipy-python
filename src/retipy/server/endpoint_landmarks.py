@@ -41,5 +41,5 @@ def post_landmarks_classification():
             image = base64.b64decode(json["image"])
             image = Image.open(io.BytesIO(image)).convert('L')
             bifurcations_data, crossings_data = landmarks.classification(np.array(image))
-            data = {"Bifurcations": bifurcations_data, "Crossings": crossings_data}
+            data = {"bifurcations": bifurcations_data, "crossings": crossings_data}
     return flask.jsonify(data)
