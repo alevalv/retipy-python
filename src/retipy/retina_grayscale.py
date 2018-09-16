@@ -19,15 +19,13 @@
 import base64
 from copy import copy
 import numpy as np
-import warnings
 import cv2
-from io import BytesIO
-
 from scipy import ndimage
 from skimage import io
 from matplotlib import pyplot as plt
-from PIL import Image
 from os import path
+from PIL import Image
+from io import BytesIO
 
 class Retina_grayscale(object):
     """
@@ -41,6 +39,13 @@ class Retina_grayscale(object):
     @staticmethod
     def _open_image(img_path):
         return io.imread(img_path)
+
+    @staticmethod
+    def get_base64_image(image: np.ndarray):
+        temp_image = Image.fromarray(image.astype('uint8'), 'L')
+        buffer = BytesIO()
+        temp_image.save(buffer, format="png")
+        return str(base64.b64encode(buffer.getvalue()).decode('utf-8'))
 
     def __init__(self, image: np.ndarray, image_path: str):
         if image is None:
@@ -245,7 +250,7 @@ class Retina_grayscale(object):
         k2 = final_vessels_segmentation <= 0
         final_vessels_segmentation[k2] = 0
         final_vessels_segmentation = self.post_processing(final_vessels_segmentation)
-        return final_vessels_segmentation
+        return self.get_base64_image(final_vessels_segmentation)
 
     def calculate_roc(self, image, result):
         true_positive = 0

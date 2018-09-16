@@ -130,8 +130,7 @@ class TestRetinaGrayscale(TestCase):
 
     def test_double_vessels_segmentation(self):
         double_segmentation = self.image.double_segmentation()
-        other_segmentation = \
-            retina_grayscale.Retina_grayscale(None, _image_path).double_segmentation()
+        other_segmentation = retina_grayscale.Retina_grayscale(None, _image_path).double_segmentation()
         assert_array_equal(double_segmentation, other_segmentation)
 
     def test_calculate_roc(self):
