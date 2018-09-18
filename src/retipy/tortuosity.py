@@ -33,14 +33,15 @@ def _tortuosity_window(x1: int, y1: int, x2: int, y2: int, notes: str):
 
 def density(
         image: np.ndarray,
-        window_size: int = 56,
+        window_size: int = 10,
         min_pixels: int = 10,
         creation_method: str = "separated",
         threshold: float = 0.97) -> dict:
     image = retina.Retina(image, "tortuosity_density")
-    image.reshape_by_window(window_size)
+    dimension = image.reshape_by_window(window_size, True)
     image.threshold_image()
-    windows = retina.Window(image, window_size, min_pixels=min_pixels, method=creation_method)
+    image.skeletonization()
+    windows = retina.Window(image, dimension, min_pixels=min_pixels, method=creation_method)
     evaluation = \
         {
             "uri": "tortuosity_density",
@@ -52,8 +53,7 @@ def density(
         window = windows.windows[i, 0]
         w_pos = windows.w_pos[i]
         image = retina.Retina(window, "td")
-        image.threshold_image()
-        image.apply_thinning()
+
         vessels = retina.detect_vessel_border(image)
         processed_vessel_count = 0
         for vessel in vessels:
@@ -73,14 +73,15 @@ def density(
 
 def fractal(
         image: np.ndarray,
-        window_size: int = 56,
-        min_pixels: int = 10,
+        window_size: int = 10,
+        min_pixels: int = 56,
         creation_method: str = "separated",
         threshold: float = 0.94) -> dict:
     image = retina.Retina(image, "tortuosity_density")
-    image.reshape_by_window(window_size)
+    dimension = image.reshape_by_window(window_size, True)
     image.threshold_image()
-    windows = retina.Window(image, window_size, min_pixels=min_pixels, method=creation_method)
+    image.skeletonization()
+    windows = retina.Window(image, dimension, min_pixels=min_pixels, method=creation_method)
     evaluation = \
         {
             "uri": "fractal_dimension",
@@ -92,8 +93,6 @@ def fractal(
         window = windows.windows[i, 0]
         w_pos = windows.w_pos[i]
         image = retina.Retina(window, "tf")
-        image.threshold_image()
-        image.apply_thinning()
         vessels = retina.detect_vessel_border(image)
         processed_vessel_count = 0
         for vessel in vessels:

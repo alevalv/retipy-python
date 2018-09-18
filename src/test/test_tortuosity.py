@@ -30,9 +30,9 @@ class TestTortuosity(TestCase):
     def test_density(self):
         result = t.density(self.image.np_image)
         self.assertEqual(result["uri"], "tortuosity_density", "uri does not match")
-        self.assertEqual(len(result["data"]), 4, "data size does not match")
+        self.assertEqual(len(result["data"]), 3, "data size does not match")
 
     def test_fractal(self):
         result = t.fractal(self.image.np_image)
         self.assertEqual(result["uri"], "fractal_dimension", "uri does not match")
-        self.assertEqual(len(result["data"]), 18, "data size does not match")
+        self.assertEqual(len(result["data"]), 16, "data size does not match")

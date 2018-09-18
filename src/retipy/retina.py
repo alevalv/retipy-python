@@ -17,6 +17,7 @@
 """retina module to handle basic image processing on retinal images"""
 
 import base64
+import math
 import numpy as np
 import warnings
 from copy import copy
@@ -117,22 +118,31 @@ class Retina(object):
             constant_values=(0, 0))
         self.shape = self.np_image.shape
 
-    def reshape_by_window(self, window: int) -> None:
+    def reshape_by_window(self, window: int, is_percentage: bool=False) -> int:
         """
         Reshapes the internal image to be able to be divided by the given window size
         :param window: an integer with the window size. Considered as a square
+        :param is_percentage: sets if the given window is a percentage of the image or a pixel value
+
+        :return: the dimension of the image on which was resized.
         """
-        acc = 0
-        while acc <= self.shape[0]:
-            acc += window
-        x_pixels = acc - self.shape[0]
-        acc = 0
-        while acc <= self.shape[1]:
-            acc += window
-        y_pixels = acc - self.shape[1]
+        dimension = window
+        if is_percentage:
+            # get the smallest dimension
+            selected_dimension = self.shape[0] if self.shape[0] < self.shape[1] else self.shape[1]
+            dimension = int(math.floor(selected_dimension/window))
+            # make it even
+            dimension += dimension % 2
+            x_pixels = (math.ceil(self.shape[0]/dimension)*dimension) - self.shape[0]
+            y_pixels = (math.ceil(self.shape[1]/dimension)*dimension) - self.shape[1]
+        else:
+            x_pixels = (math.ceil(self.shape[0] / window) * window) - self.shape[0]
+            y_pixels = (math.ceil(self.shape[1] / window) * window) - self.shape[1]
         self.np_image = np.pad(
             self.np_image, ((0, x_pixels), (0, y_pixels)), 'constant', constant_values=(0, 0))
         self.shape = self.np_image.shape
+
+        return dimension
 
     def get_window_sizes(self):
         """
@@ -222,7 +232,7 @@ class Window(Retina):
             image.np_image,
             image.filename)
         self.windows, self.w_pos = Window.create_windows(image, dimension, method, min_pixels)
-        if self.windows == []:
+        if len(self.windows) == 0:
             raise ValueError("No windows were created for the given retinal image")
         self.shape = self.windows.shape
         self._mode = self.mode_pytorch
@@ -357,19 +367,20 @@ class Window(Retina):
                  [window, depth, height, width] and its second element as [window, 2, 2]
                  with the window position
         """
-        if image.shape[0] != image.shape[1] or image.shape[0] % dimension != 0:
+        if image.shape[0] % dimension != 0 or image.shape[1] % dimension != 0:
             raise ValueError(
-                "image shape is not the same or the dimension value does not divide the image completely: "
-                + "sx:{} sy:{} dim:{}".format(image.shape[0], image.shape[1], dimension))
+                "image shape is not the same or the dimension value does not divide the image "
+                "completely: sx:{} sy:{} dim:{}".format(image.shape[0], image.shape[1], dimension))
 
         #                      window_count
         windows = []
         windows_position = []
         window_id = 0
+        img_dimension = image.shape[0] if image.shape[0] > image.shape[1] else image.shape[1]
         if method == "separated":
             windows = np.empty(
-                [(image.shape[0] // dimension) ** 2, image.depth, dimension, dimension])
-            windows_position = np.empty([(image.shape[0] // dimension) ** 2, 2, 2], dtype=np.int)
+                [(img_dimension // dimension) ** 2, image.depth, dimension, dimension])
+            windows_position = np.empty([(img_dimension // dimension) ** 2, 2, 2], dtype=np.int)
             for x in range(0, image.shape[0], dimension):
                 for y in range(0, image.shape[1], dimension):
                     cw = windows_position[window_id]
@@ -383,8 +394,9 @@ class Window(Retina):
                         window_id += 1
         elif method == "combined":
             new_dimension = dimension // 2
-            windows = np.empty([(image.shape[0] // new_dimension) ** 2, image.depth, dimension, dimension])
-            windows_position = np.empty([(image.shape[0] // new_dimension) ** 2, 2, 2], dtype=np.int)
+            windows = np.empty(
+                [(img_dimension // new_dimension) ** 2, image.depth, dimension, dimension])
+            windows_position = np.empty([(img_dimension // new_dimension) ** 2, 2, 2], dtype=np.int)
             if image.shape[0] % new_dimension != 0:
                 raise ValueError(
                     "Dimension value '{}' is not valid, choose a value that its half value can split the image evenly"
