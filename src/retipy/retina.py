@@ -170,6 +170,15 @@ class Retina(object):
         image = self.np_image.astype(np.uint8) * 255
         return image
 
+    def reshape_for_landmarks(self, size: int):
+        """
+        Reshapes the internal image to fix erros with retinal images without borders
+        :param size: an integer with the border size.
+        """
+        self.np_image = np.pad(self.np_image, pad_width=size, mode='constant', constant_values=0)
+        self.shape = self.np_image.shape
+
+
 ##################################################################################################
 # I/O functions
 

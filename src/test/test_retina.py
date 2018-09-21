@@ -151,6 +151,12 @@ class TestRetina(TestCase):
         image = self.image.np_image.astype(np.uint8) * 255
         assert_array_equal(image, self.image.get_uint_image())
 
+    def test_reshape_to_landmarks(self):
+        self.image.reshape_for_landmarks(5)
+        new_image = retina.Retina(None, _image_path)
+        new_image.np_image = np.pad(new_image.np_image, pad_width=5, mode='constant', constant_values=0)
+        assert_array_equal(new_image.np_image, self.image.np_image)
+
 
 class TestWindow(TestCase):
 

@@ -153,7 +153,7 @@ def vessel_number(vessels: list, landmarks: list, skeleton_rgb: np.ndarray):
     return skeleton, final_landmarks
 
 
-def boxes_auxiliary(skeleton: np.ndarray, landmarks: list, bifurcations_coordinates: list, crossings_coordinates: list):
+def boxes_auxiliary(skeleton: np.ndarray, landmarks: list, size: int, bifurcations_coordinates: list, crossings_coordinates: list):
     x = landmarks[0][0]
     y = landmarks[0][1]
     num_bifurcations = 0
@@ -170,28 +170,29 @@ def boxes_auxiliary(skeleton: np.ndarray, landmarks: list, bifurcations_coordina
     landmarks = [val for val in landmarks if val not in box]
 
     if num_bifurcations > num_crossings:
-        bifurcations_coordinates.append([y - 3, x - 3, y + 3, x + 3])
+        bifurcations_coordinates.append([y - 3 - size, x - 3 - size, y + 3 - size, x + 3 - size])
     else:
-        crossings_coordinates.append([y - 3, x - 3, y + 3, x + 3])
+        crossings_coordinates.append([y - 3 - size, x - 3 - size, y + 3 + size, x + 3 + size])
 
     return landmarks
 
 
-def principal_boxes(skeleton: np.ndarray, landmarks: list):
+def principal_boxes(skeleton: np.ndarray, landmarks: list, size: int):
     junct = landmarks.copy()
     bifurcations_coordinates = []
     crossings_coordinates = []
     while True:
         if junct:
-            junct = boxes_auxiliary(skeleton, junct, bifurcations_coordinates, crossings_coordinates)
+            junct = boxes_auxiliary(skeleton, junct, size, bifurcations_coordinates, crossings_coordinates)
         else:
             break
 
     return bifurcations_coordinates, crossings_coordinates
 
 
-def classification(image: np.ndarray):
+def classification(image: np.ndarray, border_size: int):
     img = retina.Retina(image, None)
+    img.reshape_for_landmarks(border_size)
     img.threshold_image()
     threshold = img.get_uint_image()
     img.skeletonization()
@@ -203,6 +204,6 @@ def classification(image: np.ndarray):
     widths = vessel_width(threshold, landmarks)
     vessels = finding_landmark_vessels(widths, landmarks, skeleton, skeleton_rgb)
     marked_skeleton, final_landmarks = vessel_number(vessels, landmarks, skeleton_rgb)
-    bifurcations, crossings = principal_boxes(marked_skeleton, final_landmarks)
+    bifurcations, crossings = principal_boxes(marked_skeleton, final_landmarks, border_size)
 
     return bifurcations, crossings
