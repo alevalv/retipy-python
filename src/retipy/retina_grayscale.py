@@ -281,8 +281,7 @@ class Retina_grayscale(object):
         final_vessels_segmentation[k2] = 0
 
         final_vessels_segmentation = self.post_processing(final_vessels_segmentation)
-        #return self.get_base64_image(final_vessels_segmentation)
-        return final_vessels_segmentation
+        return self.get_base64_image(final_vessels_segmentation)
 
     def calculate_roc(self, image, result):
         true_positive = 0
