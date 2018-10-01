@@ -66,6 +66,12 @@ class Retina_grayscale(object):
         self.segmented_image = np.zeros((self.shape))
         self.roc = np.zeros((1,5)).astype(np.float)
 
+        if image_type == None:
+            if self.shape[0] <= 584 and self.shape[1] <= 565:
+                image_type = 2
+            else:
+                image_type = 1
+
         if image_type == 1:
             self.mask = self.np_image <= 5
             self.kernel_mean_filter = 11

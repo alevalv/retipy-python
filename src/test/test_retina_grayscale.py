@@ -28,7 +28,9 @@ from retipy import retina_grayscale
 
 _resources = 'src/test/resources/images/'
 _image_file_name = 'test_image.pgm'
+_image_file_name_2 = '01_h.jpg'
 _image_path = _resources + _image_file_name
+_image_path_2 = _resources + _image_file_name_2
 _shadow_correction_path = _resources + 'shadowCorrection.pgm'
 _homogenize_path = _resources + 'homogenization.pgm'
 _normal_vessels_segmentation_path = _resources + 'normalVesselsSegmentation.pgm'
@@ -55,10 +57,20 @@ class TestRetinaGrayscale(TestCase):
         image = io.imread(_image_path)
         none_constructor_image = retina_grayscale.Retina_grayscale(image, _image_file_name, 1)
 
-    def test_constructor_image_type2(self):
+    def test_constructor_image_type_2(self):
         """Test the constructor with an existing image"""
         image = io.imread(_image_path)
         none_constructor_image = retina_grayscale.Retina_grayscale(image, _image_file_name, 2)
+
+    def test_constructor_image_no_type(self):
+        """Test the constructor with an existing image"""
+        image = io.imread(_image_path)
+        none_constructor_image = retina_grayscale.Retina_grayscale(image, _image_file_name, None)
+
+    def test_constructor_image_no_type_2(self):
+        """Test the constructor with an existing image"""
+        image = io.imread(_image_path_2)
+        none_constructor_image = retina_grayscale.Retina_grayscale(image, _image_file_name, None)
 
     def test_restore_mask(self):
         self.image.np_image[self.image.mask == 0] = 5
