@@ -45,37 +45,37 @@ def vessel_width(thresholded_image: np.ndarray, landmarks: list):
     image = thresholded_image.copy()
     widths = []
     for j in landmarks:
-        w0 = w45 = w90 = w135 = w180 = w225 = w270 = w315 = 1
+        w0 = w45 = w90 = w135 = 0
+        w180 = w225 = w270 = w315 = 1
         while True:
-            if image[j[0], j[1] + w0] != 0:
+            if image[j[0], j[1] + w0 + 1] != 0:
                 w0 += 1
-            if image[j[0], j[1] - w180] != 0:
+            if image[j[0], j[1] - w180 - 1] != 0:
                 w180 += 1
-            if image[j[0] - w45, j[1] + w45] != 0:
+            if image[j[0] - w45 - 1, j[1] + w45 + 1] != 0:
                 w45 += 1
-            if image[j[0] + w225, j[1] - w225] != 0:
+            if image[j[0] + w225 + 1, j[1] - w225 - 1] != 0:
                 w225 += 1
-            if image[j[0] - w90, j[1]] != 0:
+            if image[j[0] - w90 - 1, j[1]] != 0:
                 w90 += 1
-            if image[j[0] + w270, j[1]] != 0:
+            if image[j[0] + w270 + 1, j[1]] != 0:
                 w270 += 1
-            if image[j[0] - w135, j[1] - w135] != 0:
+            if image[j[0] - w135 - 1, j[1] - w135 - 1] != 0:
                 w135 += 1
-            if image[j[0] + w315, j[1] + w315] != 0:
+            if image[j[0] + w315 + 1, j[1] + w315 + 1] != 0:
                 w315 += 1
 
-            if image[j[0], j[1] + w0] == 0 and image[j[0], j[1] - w180] == 0 and (w0 > 1 or w180 > 1):
-                widths.append([0, w0, w180 - 1])
+            if image[j[0], j[1] + w0 + 1] == 0 and image[j[0], j[1] - w180 - 1] == 0:
+                widths.append([0, w0, w180])
                 break
-            elif image[j[0] - w45, j[1] + w45] == 0 and image[j[0] + w225, j[1] - w225] == 0 and (w45 > 1 or w225 > 1):
-                widths.append([45, w45, w225 - 1])
+            elif image[j[0] - w45 - 1, j[1] + w45 + 1] == 0 and image[j[0] + w225 + 1, j[1] - w225 - 1] == 0:
+                widths.append([45, w45, w225])
                 break
-            elif image[j[0] - w90, j[1]] == 0 and image[j[0] + w270, j[1]] == 0 and (w90 > 1 or w270 > 1):
-                widths.append([90, w90, w270 - 1])
+            elif image[j[0] - w90 - 1, j[1]] == 0 and image[j[0] + w270 + 1, j[1]] == 0:
+                widths.append([90, w90, w270])
                 break
-            elif image[j[0] - w135, j[1] - w135] == 0 and image[j[0] + w315, j[1] + w315] == 0 and (
-                    w135 > 1 or w315 > 1):
-                widths.append([135, w135, w315 - 1])
+            elif image[j[0] - w135 - 1, j[1] - w135 - 1] == 0 and image[j[0] + w315 + 1, j[1] + w315 + 1] == 0:
+                widths.append([135, w135, w315])
                 break
 
     return widths
@@ -141,16 +141,19 @@ def finding_landmark_vessels(widths: list, landmarks: list, skeleton: np.ndarray
 def vessel_number(vessels: list, landmarks: list, skeleton_rgb: np.ndarray):
     skeleton = skeleton_rgb.copy()
     length = len(vessels)
+    final_landmarks = []
     for v in range(0, length):
         if len(vessels[v]) == 3:
             skeleton[landmarks[v][0], landmarks[v][1]] = [0, 0, 255]
+            final_landmarks.append(landmarks[v])
         elif len(vessels[v]) == 4:
             skeleton[landmarks[v][0], landmarks[v][1]] = [255, 0, 0]
+            final_landmarks.append(landmarks[v])
 
-    return skeleton
+    return skeleton, final_landmarks
 
 
-def boxes_auxiliary(skeleton: np.ndarray, landmarks: list, bifurcations_coordinates: list, crossings_coordinates: list):
+def boxes_auxiliary(skeleton: np.ndarray, landmarks: list, size: int, bifurcations_coordinates: list, crossings_coordinates: list):
     x = landmarks[0][0]
     y = landmarks[0][1]
     num_bifurcations = 0
@@ -167,28 +170,29 @@ def boxes_auxiliary(skeleton: np.ndarray, landmarks: list, bifurcations_coordina
     landmarks = [val for val in landmarks if val not in box]
 
     if num_bifurcations > num_crossings:
-        bifurcations_coordinates.append([y - 3, x - 3, y + 3, x + 3])
+        bifurcations_coordinates.append([y - 3 - size, x - 3 - size, y + 3 - size, x + 3 - size])
     else:
-        crossings_coordinates.append([y - 3, x - 3, y + 3, x + 3])
+        crossings_coordinates.append([y - 3 - size, x - 3 - size, y + 3 + size, x + 3 + size])
 
     return landmarks
 
 
-def principal_boxes(skeleton: np.ndarray, landmarks: list):
+def principal_boxes(skeleton: np.ndarray, landmarks: list, size: int):
     junct = landmarks.copy()
     bifurcations_coordinates = []
     crossings_coordinates = []
     while True:
         if junct:
-            junct = boxes_auxiliary(skeleton, junct, bifurcations_coordinates, crossings_coordinates)
+            junct = boxes_auxiliary(skeleton, junct, size, bifurcations_coordinates, crossings_coordinates)
         else:
             break
 
     return bifurcations_coordinates, crossings_coordinates
 
 
-def classification(image: np.ndarray):
+def classification(image: np.ndarray, border_size: int):
     img = retina.Retina(image, None)
+    img.reshape_for_landmarks(border_size)
     img.threshold_image()
     threshold = img.get_uint_image()
     img.skeletonization()
@@ -199,7 +203,7 @@ def classification(image: np.ndarray):
     landmarks = potential_landmarks(skeleton, 3)
     widths = vessel_width(threshold, landmarks)
     vessels = finding_landmark_vessels(widths, landmarks, skeleton, skeleton_rgb)
-    marked_skeleton = vessel_number(vessels, landmarks, skeleton_rgb)
-    bifurcations, crossings = principal_boxes(marked_skeleton, landmarks)
+    marked_skeleton, final_landmarks = vessel_number(vessels, landmarks, skeleton_rgb)
+    bifurcations, crossings = principal_boxes(marked_skeleton, final_landmarks, border_size)
 
     return bifurcations, crossings

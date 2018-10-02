@@ -24,13 +24,14 @@ from numpy.testing import assert_array_equal
 
 class TestLandmarks(TestCase):
     _resources = 'src/resources/images/'
-    _image_file_name = 'img02.png'
+    _image_file_name = 'test_landmarks.png'
     _image_path = _resources + _image_file_name
 
     def setUp(self):
         self.image = Retina(None, self._image_path)
 
     def test_potential_landmarks(self):
+        self.image.reshape_for_landmarks(2)
         self.image.threshold_image()
         self.image.skeletonization()
         skeleton = self.image.get_uint_image()
@@ -40,6 +41,7 @@ class TestLandmarks(TestCase):
         assert_array_equal(result, landmarks, "landmark points does not match")
 
     def test_vessel_width(self):
+        self.image.reshape_for_landmarks(2)
         self.image.threshold_image()
         threshold = self.image.get_uint_image()
         self.image.skeletonization()
@@ -51,6 +53,7 @@ class TestLandmarks(TestCase):
         assert_array_equal(result, widths, "Vessel widths does not match")
 
     def test_finding_landmark_vessels(self):
+        self.image.reshape_for_landmarks(2)
         self.image.threshold_image()
         threshold = self.image.get_uint_image()
         self.image.skeletonization()
@@ -65,6 +68,7 @@ class TestLandmarks(TestCase):
         assert_array_equal(result, vessels[0], "Landmark vessels does not match")
 
     def test_vessel_number(self):
+        self.image.reshape_for_landmarks(2)
         self.image.threshold_image()
         threshold = self.image.get_uint_image()
         self.image.skeletonization()
@@ -74,12 +78,15 @@ class TestLandmarks(TestCase):
         landmarks = l.potential_landmarks(skeleton, 3)
         widths = l.vessel_width(threshold, landmarks)
         vessels = l.finding_landmark_vessels(widths, landmarks, skeleton, skeleton_rgb)
-        marked_skeleton = l.vessel_number(vessels, landmarks, skeleton_rgb)
-        result = np.genfromtxt("src/test/csv/vessel_number_test.csv", delimiter=',')
+        marked_skeleton, final_landmarks = l.vessel_number(vessels, landmarks, skeleton_rgb)
+        result_skeleton = np.genfromtxt("src/test/csv/vessel_number_skeleton_test.csv", delimiter=',')
+        result_landmarks = np.genfromtxt("src/test/csv/vessel_number_filter_test.csv", delimiter=',')
 
-        assert_array_equal(result, marked_skeleton[:, 300], "Vessel number does not match")
+        assert_array_equal(result_skeleton, marked_skeleton[20, :], "Vessel skeleton does not match")
+        assert_array_equal(result_landmarks, final_landmarks, "Vessel final landmarks does not match")
 
     def test_principal_boxes(self):
+        self.image.reshape_for_landmarks(2)
         self.image.threshold_image()
         threshold = self.image.get_uint_image()
         self.image.skeletonization()
@@ -89,21 +96,21 @@ class TestLandmarks(TestCase):
         landmarks = l.potential_landmarks(skeleton, 3)
         widths = l.vessel_width(threshold, landmarks)
         vessels = l.finding_landmark_vessels(widths, landmarks, skeleton, skeleton_rgb)
-        marked_skeleton = l.vessel_number(vessels, landmarks, skeleton_rgb)
-        bifurcations, crossings = l.principal_boxes(marked_skeleton, landmarks)
+        marked_skeleton, final_landmarks = l.vessel_number(vessels, landmarks, skeleton_rgb)
+        bifurcations, crossings = l.principal_boxes(marked_skeleton, final_landmarks, 2)
         result = np.genfromtxt("src/test/csv/boxes_bifurcations_test.csv", delimiter=',')
         result2 = np.genfromtxt("src/test/csv/boxes_crossings_test.csv", delimiter=',')
 
-        assert_array_equal(result, bifurcations, "Bifurcation points does not match")
-        assert_array_equal(result2, crossings, "Crossing points does not match")
+        assert_array_equal(result, bifurcations[0], "Bifurcation points does not match")
+        assert_array_equal(result2, crossings[0], "Crossing points does not match")
 
     def test_classification(self):
-        bifurcations, crossings = l.classification(self.image.np_image)
+        bifurcations, crossings = l.classification(self.image.np_image, 2)
         result = np.genfromtxt("src/test/csv/boxes_bifurcations_test.csv", delimiter=',')
         result2 = np.genfromtxt("src/test/csv/boxes_crossings_test.csv", delimiter=',')
 
-        assert_array_equal(result, bifurcations, "Bifurcation points does not match")
-        assert_array_equal(result2, crossings, "Crossing points does not match")
+        assert_array_equal(result, bifurcations[0], "Bifurcation points does not match")
+        assert_array_equal(result2, crossings[0], "Crossing points does not match")
 
 
 
