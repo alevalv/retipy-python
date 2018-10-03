@@ -65,12 +65,12 @@ class TestRetinaGrayscale(TestCase):
     def test_constructor_image_no_type(self):
         """Test the constructor with an existing image"""
         image = io.imread(_image_path)
-        none_constructor_image = retina_grayscale.Retina_grayscale(image, _image_file_name, None)
+        none_constructor_image = retina_grayscale.Retina_grayscale(image, _image_file_name)
 
     def test_constructor_image_no_type_2(self):
         """Test the constructor with an existing image"""
         image = io.imread(_image_path_2)
-        none_constructor_image = retina_grayscale.Retina_grayscale(image, _image_file_name, None)
+        none_constructor_image = retina_grayscale.Retina_grayscale(image, _image_file_name)
 
     def test_restore_mask(self):
         self.image.np_image[self.image.mask == 0] = 5

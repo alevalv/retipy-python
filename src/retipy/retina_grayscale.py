@@ -1,5 +1,5 @@
 # Retipy - Retinal Image Processing on Python
-# Copyright (C) 2017  Alejandro Valdes
+# Copyright (C) 2018  Luis Felipe Castaño
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,9 +32,9 @@ class Retina_grayscale(object):
     Retina_grayscale class that internally contains a matrix with the green channel image data for a retinal image, it
     constructor expects a path to the image
 
-    :param image_path: path to an fundus image to be open
-    :param result_image_path: path to an  to be open
-    :param mask_path: path to an fundus image to be open
+    :param image: a numpy array with the image data
+    :param image_path: path to an image to be open
+    :param image_type: This value represent the image resolution. When this value is zero, the algorithm is set automatically
     """
     @staticmethod
     def _open_image(img_path):
@@ -47,7 +47,7 @@ class Retina_grayscale(object):
         temp_image.save(buffer, format="png")
         return str(base64.b64encode(buffer.getvalue()).decode('utf-8'))
 
-    def __init__(self, image: np.ndarray, image_path: str, image_type: int):
+    def __init__(self, image: np.ndarray, image_path: str, image_type: int=0):
         if image is None:
             self.np_image = self._open_image(image_path)
             _, file = path.split(image_path)
@@ -66,8 +66,8 @@ class Retina_grayscale(object):
         self.segmented_image = np.zeros((self.shape))
         self.roc = np.zeros((1,5)).astype(np.float)
 
-        if image_type == None:
-            if self.shape[0] <= 584 and self.shape[1] <= 565:
+        if image_type == 0:
+            if self.shape[0] <= 1020 and self.shape[1] <= 1020:
                 image_type = 2
             else:
                 image_type = 1
