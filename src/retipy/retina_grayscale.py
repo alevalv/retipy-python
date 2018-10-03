@@ -1,5 +1,5 @@
 # Retipy - Retinal Image Processing on Python
-# Copyright (C) 2017  Alejandro Valdes
+# Copyright (C) 2018  Luis Felipe Castaño
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,9 +32,9 @@ class Retina_grayscale(object):
     Retina_grayscale class that internally contains a matrix with the green channel image data for a retinal image, it
     constructor expects a path to the image
 
-    :param image_path: path to an fundus image to be open
-    :param result_image_path: path to an  to be open
-    :param mask_path: path to an fundus image to be open
+    :param image: a numpy array with the image data
+    :param image_path: path to an image to be open
+    :param image_type: This value represent the image resolution. When this value is zero, the algorithm is set automatically
     """
     @staticmethod
     def _open_image(img_path):
@@ -47,7 +47,7 @@ class Retina_grayscale(object):
         temp_image.save(buffer, format="png")
         return str(base64.b64encode(buffer.getvalue()).decode('utf-8'))
 
-    def __init__(self, image: np.ndarray, image_path: str):
+    def __init__(self, image: np.ndarray, image_path: str, image_type: int=0):
         if image is None:
             self.np_image = self._open_image(image_path)
             _, file = path.split(image_path)
@@ -62,13 +62,50 @@ class Retina_grayscale(object):
         self.old_image = None
         self.shape = self.np_image.shape
         self.original_image = self.np_image
-
-        self.mask = self.np_image <= 5
-        self.mask = abs(1-self.mask)
-
         self.segmented = False
         self.segmented_image = np.zeros((self.shape))
         self.roc = np.zeros((1,5)).astype(np.float)
+
+        if image_type == 0:
+            if self.shape[0] <= 1020 and self.shape[1] <= 1020:
+                image_type = 2
+            else:
+                image_type = 1
+
+        if image_type == 1:
+            self.mask = self.np_image <= 5
+            self.kernel_mean_filter = 11
+            self.kernel_gaussian_filter = 33
+            self.kernel_median_filter = 111
+            self.kernel_opening = 13 #9
+            self.normal_vessels_segmentation_min_value = 5000
+            self.main_adaptative_method = cv2.ADAPTIVE_THRESH_MEAN_C
+            self.tiny_vessels_segmentation_min_value = 100
+            self.postprocesing_segmentation_min_value = 70
+            self.maximum_radius_to_fill = 20
+            self.tiny_vessels_threshold = 13 #11
+            self.kernel_erode = 3
+            self.kernel_dilate = 3
+            self.smoothing_curves_iterations = 6
+            self.smoothing_curves_kernel = 5
+        if image_type == 2:
+            self.mask = self.np_image <= 30
+            self.kernel_mean_filter = 3
+            self.kernel_gaussian_filter = 9
+            self.kernel_median_filter = 41
+            self.kernel_opening = 3 #9
+            self.normal_vessels_segmentation_min_value = 50
+            self.main_adaptative_method = cv2.ADAPTIVE_THRESH_GAUSSIAN_C
+            self.tiny_vessels_segmentation_min_value = 150
+            self.postprocesing_segmentation_min_value = 17
+            self.maximum_radius_to_fill = 5
+            self.tiny_vessels_threshold = 11#11
+            self.kernel_erode = 1
+            self.kernel_dilate = 1
+            self.smoothing_curves_iterations = 2
+            self.smoothing_curves_kernel = 3
+
+        self.mask = abs(1 - self.mask)
 
 ##################################################################################################
 # Image Processing functions
@@ -132,11 +169,11 @@ class Retina_grayscale(object):
 
         self._copy()
         minuendo = np.copy(self.np_image)
-        self.mean_filter(11)
-        self.gaussian_filter(33, 1.82)
+        self.mean_filter(self.kernel_mean_filter)
+        self.gaussian_filter(self.kernel_gaussian_filter, 1.82)
         self.mean_value = np.mean(self.np_image)
         self.np_image[self.mask] = self.mean_value
-        self.median_filter(111)#Ver si es posible aumentarlo en otro pc
+        self.median_filter(self.kernel_median_filter)#Ver si es posible aumentarlo en otro pc
         self.np_image = minuendo - self.np_image.astype(np.float)
         min = self.np_image.min()
         self.np_image = self.np_image - min
@@ -164,58 +201,53 @@ class Retina_grayscale(object):
         self.np_image = aux
         self.IH = np.copy(aux)
 
-    def vessel_enhancement(self):
-        """Generates a new vessel-enhanced image"""
-        self.np_image = abs(self.IH - 255)
-        self.top_hat(40)
-
     def normal_vessels_segmentation(self):
         self.shadow_correction()
         self.homogenize()
         IH = cv2.GaussianBlur(self.IH, (3, 3), 1.72).astype(np.uint8)
         ret, normal_vessels_segmentation = cv2.threshold(IH, 0, 255, cv2.THRESH_OTSU)
-        ret, normal_vessels_segmentation = cv2.threshold(IH, 0, 255, cv2.THRESH_OTSU)
         _, npaContours, hierarchy = cv2.findContours(normal_vessels_segmentation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         for npaContour in npaContours:
-            if (cv2.contourArea(npaContour) < 5000):  # 100
+            if (cv2.contourArea(npaContour) < self.normal_vessels_segmentation_min_value):  # 100
                 cv2.drawContours(normal_vessels_segmentation, [npaContour], -1, (255, 255, 255), -1)
         return abs(255 - normal_vessels_segmentation)
 
 
     def tiny_vessels_segmentation(self):
         self.equalize_histogram()
-        self.opening(13)#13
-
+        self.opening(self.kernel_opening)
         self.shadow_correction()
         self.homogenize()
-
         IH = cv2.GaussianBlur(self.IH, (3, 3), 1.72).astype(np.uint8)
-        tiny_vessels_segmentation = cv2.adaptiveThreshold(IH, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 13, 2)#13
+
+        tiny_vessels_segmentation = cv2.adaptiveThreshold(IH, 255, self.main_adaptative_method, cv2.THRESH_BINARY, self.tiny_vessels_threshold, 2)#13
+
         tiny_vessels_segmentation = abs(255 - tiny_vessels_segmentation)
-        kernel = np.ones((3, 3), np.uint8)
+
+        kernel = np.ones((self.kernel_erode, self.kernel_erode), np.uint8)
         tiny_vessels_segmentation = cv2.erode(tiny_vessels_segmentation, kernel, iterations=1)
 
         _, npaContours, hierarchy = cv2.findContours(tiny_vessels_segmentation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         for npaContour in npaContours:
-            if (cv2.contourArea(npaContour) < 100):  # pragma: no cover
+            if (cv2.contourArea(npaContour) < self.tiny_vessels_segmentation_min_value):  # pragma: no cover
                 cv2.drawContours(tiny_vessels_segmentation, [npaContour], -1, (0, 0, 0), -1) # 250
 
-        kernel = np.ones((3, 3), np.uint8)
+        kernel = np.ones((self.kernel_dilate, self.kernel_dilate), np.uint8)
         tiny_vessels_segmentation = cv2.dilate(tiny_vessels_segmentation, kernel, iterations=1)
         return tiny_vessels_segmentation
 
     def post_processing(self, final_vessels_segmentation):
-        kernel = np.ones((3, 3), np.uint8)
+        kernel = np.ones((self.kernel_dilate, self.kernel_dilate), np.uint8)
         final_vessels_segmentation = cv2.dilate(final_vessels_segmentation, kernel, iterations=1)
         final_vessels_segmentation = abs(255 - final_vessels_segmentation)
 
+
         _, npaContours, hierarchy = cv2.findContours(final_vessels_segmentation.astype(np.uint8), cv2.RETR_TREE,
                                                      cv2.CHAIN_APPROX_SIMPLE)
         for npaContour in npaContours:
             (x, y), radius = cv2.minEnclosingCircle(npaContour)
-            if (radius < 70):
+            if (radius < self.postprocesing_segmentation_min_value):
                 center = (int(x), int(y))
-                # cv2.circle(final_vessels_segmentation, center, int(radius), (0, 0, 0), 2)
                 cv2.drawContours(final_vessels_segmentation, [npaContour], -1, (255, 255, 255), -1)
 
         final_vessels_segmentation = abs(255 - final_vessels_segmentation)
@@ -224,18 +256,17 @@ class Retina_grayscale(object):
                                                      cv2.CHAIN_APPROX_SIMPLE)
         for npaContour in npaContours:
             (x, y), radius = cv2.minEnclosingCircle(npaContour)
-            if (radius < 20):
+            if (radius < self.maximum_radius_to_fill):
                 center = (int(x), int(y))
                 # cv2.circle(final_vessels_segmentation, center, int(radius), (0, 0, 0), 2)
                 cv2.drawContours(final_vessels_segmentation, [npaContour], -1, (255, 255, 255), -1)
-
         cv2.pyrUp(final_vessels_segmentation, final_vessels_segmentation)
-        for i in range(0, 6):
-            final_vessels_segmentation = cv2.medianBlur(final_vessels_segmentation.astype(np.uint8), 5)
+        for i in range(0, self.smoothing_curves_iterations):
+            final_vessels_segmentation = cv2.medianBlur(final_vessels_segmentation.astype(np.uint8), self.smoothing_curves_kernel)
 
         cv2.pyrDown(final_vessels_segmentation, final_vessels_segmentation)
 
-        kernel = np.ones((3, 3), np.uint8)
+        kernel = np.ones((self.kernel_erode, self.kernel_erode), np.uint8)
         final_vessels_segmentation = cv2.erode(final_vessels_segmentation, kernel, iterations=1)
         return final_vessels_segmentation
 
@@ -243,12 +274,12 @@ class Retina_grayscale(object):
         normal_vessels_segmentation = self.normal_vessels_segmentation()
         self.np_image = self.original_image
         tiny_vessels_segmentation = self.tiny_vessels_segmentation()
-
         final_vessels_segmentation = tiny_vessels_segmentation.astype(np.float) + normal_vessels_segmentation.astype(np.float)
         k = final_vessels_segmentation >= 1
         final_vessels_segmentation[k] = 255
         k2 = final_vessels_segmentation <= 0
         final_vessels_segmentation[k2] = 0
+
         final_vessels_segmentation = self.post_processing(final_vessels_segmentation)
         return self.get_base64_image(final_vessels_segmentation)
 

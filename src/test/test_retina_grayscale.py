@@ -28,7 +28,9 @@ from retipy import retina_grayscale
 
 _resources = 'src/test/resources/images/'
 _image_file_name = 'test_image.pgm'
+_image_file_name_2 = '01_h.jpg'
 _image_path = _resources + _image_file_name
+_image_path_2 = _resources + _image_file_name_2
 _shadow_correction_path = _resources + 'shadowCorrection.pgm'
 _homogenize_path = _resources + 'homogenization.pgm'
 _normal_vessels_segmentation_path = _resources + 'normalVesselsSegmentation.pgm'
@@ -44,7 +46,7 @@ class TestRetinaGrayscale(TestCase):
     """Test class for Retina class"""
 
     def setUp(self):
-        self.image = retina_grayscale.Retina_grayscale(None, _image_path)
+        self.image = retina_grayscale.Retina_grayscale(None, _image_path, 1)
 
     def test_constructor_invalid_path(self):
         """Test the retina constructor when the given path is invalid"""
@@ -53,19 +55,34 @@ class TestRetinaGrayscale(TestCase):
     def test_constructor_existing_image(self):
         """Test the constructor with an existing image"""
         image = io.imread(_image_path)
+        none_constructor_image = retina_grayscale.Retina_grayscale(image, _image_file_name, 1)
+
+    def test_constructor_image_type_2(self):
+        """Test the constructor with an existing image"""
+        image = io.imread(_image_path)
+        none_constructor_image = retina_grayscale.Retina_grayscale(image, _image_file_name, 2)
+
+    def test_constructor_image_no_type(self):
+        """Test the constructor with an existing image"""
+        image = io.imread(_image_path)
+        none_constructor_image = retina_grayscale.Retina_grayscale(image, _image_file_name)
+
+    def test_constructor_image_no_type_2(self):
+        """Test the constructor with an existing image"""
+        image = io.imread(_image_path_2)
         none_constructor_image = retina_grayscale.Retina_grayscale(image, _image_file_name)
 
     def test_restore_mask(self):
         self.image.np_image[self.image.mask == 0] = 5
         self.image.restore_mask()
-        original_image = retina_grayscale.Retina_grayscale(None, _image_path)
+        original_image = retina_grayscale.Retina_grayscale(None, _image_path, 1)
         original_image.np_image[original_image.mask == 0] = 5
         original_image.restore_mask()
         assert_array_equal(self.image.np_image, original_image.np_image)
 
     def test_equalize_histogram(self):
         self.image.equalize_histogram()
-        original_image = retina_grayscale.Retina_grayscale(None, _image_path)
+        original_image = retina_grayscale.Retina_grayscale(None, _image_path, 1)
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(3, 3))
         original_image.np_image = clahe.apply(original_image.np_image)
         original_image.restore_mask()
@@ -73,32 +90,32 @@ class TestRetinaGrayscale(TestCase):
 
     def test_opening(self):
         self.image.opening(3)
-        original_image = retina_grayscale.Retina_grayscale(None, _image_path)
+        original_image = retina_grayscale.Retina_grayscale(None, _image_path, 1)
         assert_array_equal(self.image.np_image,
                            ndimage.grey_opening(original_image.np_image, size=(3, 3)))
 
     def test_top_hat(self):
         self.image.top_hat(3)
-        original_image = retina_grayscale.Retina_grayscale(None, _image_path)
+        original_image = retina_grayscale.Retina_grayscale(None, _image_path, 1)
         assert_array_equal(self.image.np_image,
                            cv2.morphologyEx(original_image.np_image, cv2.MORPH_TOPHAT, cv2.getStructuringElement(cv2.MORPH_RECT, (
                            3, 3))))
 
     def test_mean_filter(self):
         self.image.mean_filter(3)
-        original_image = retina_grayscale.Retina_grayscale(None, _image_path)
+        original_image = retina_grayscale.Retina_grayscale(None, _image_path, 1)
         assert_array_equal(self.image.np_image,
                            cv2.blur(original_image.np_image, (3, 3)))
 
     def test_gaussian_filter(self):
         self.image.gaussian_filter(17, 1.82)
-        original_image = retina_grayscale.Retina_grayscale(None, _image_path)
+        original_image = retina_grayscale.Retina_grayscale(None, _image_path, 1)
         assert_array_equal(self.image.np_image,
                            cv2.GaussianBlur(original_image.np_image, (17, 17), 1.82))
 
     def test_median_filter(self):
         self.image.median_filter(3)
-        original_image = retina_grayscale.Retina_grayscale(None, _image_path)
+        original_image = retina_grayscale.Retina_grayscale(None, _image_path, 1)
         assert_array_equal(self.image.np_image,
                            cv2.medianBlur(original_image.np_image.astype(np.uint8), 3))
 
@@ -108,15 +125,6 @@ class TestRetinaGrayscale(TestCase):
     def test_homogenize(self):
         self.image.shadow_correction()
         self.image.homogenize()
-
-    def test_vessel_enhancement(self):
-        self.image.homogenize()
-        self.image.vessel_enhancement()
-        original_image = retina_grayscale.Retina_grayscale(None, _image_path)
-        original_image.homogenize()
-        original_image.np_image = abs(original_image.IH - 255)
-        original_image.top_hat(40)
-        assert_array_equal(self.image.IH, original_image.IH)
 
     def test_tiny_vessels_segmentation(self):
         tiny_segmentation = self.image.tiny_vessels_segmentation()
@@ -130,12 +138,12 @@ class TestRetinaGrayscale(TestCase):
 
     def test_double_vessels_segmentation(self):
         double_segmentation = self.image.double_segmentation()
-        other_segmentation = retina_grayscale.Retina_grayscale(None, _image_path).double_segmentation()
+        other_segmentation = retina_grayscale.Retina_grayscale(None, _image_path, 1).double_segmentation()
         assert_array_equal(double_segmentation, other_segmentation)
 
     def test_calculate_roc(self):
         double_segmentation = self.image.normal_vessels_segmentation()
-        original_image = retina_grayscale.Retina_grayscale(None, _manual_result_path)
+        original_image = retina_grayscale.Retina_grayscale(None, _manual_result_path, 1)
         self.image.calculate_roc(double_segmentation/255, original_image.np_image/255)
         assert_array_equal(self.image.roc, [[ 425.,  304.,  423.,  299., 1451.]])
 

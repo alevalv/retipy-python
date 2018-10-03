@@ -1,5 +1,5 @@
 # Retipy - Retinal Image Processing on Python
-# Copyright (C) 2018  Alejandro Valdes
+# Copyright (C) 2018  Luis Felipe Castaño
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
