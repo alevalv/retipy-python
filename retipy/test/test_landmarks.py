@@ -23,7 +23,7 @@ from numpy.testing import assert_array_equal
 
 
 class TestLandmarks(TestCase):
-    _resources = 'src/resources/images/'
+    _resources = 'retipy/resources/images/'
     _image_file_name = 'test_landmarks.png'
     _image_path = _resources + _image_file_name
 
@@ -36,7 +36,7 @@ class TestLandmarks(TestCase):
         self.image.skeletonization()
         skeleton = self.image.get_uint_image()
         landmarks = l.potential_landmarks(skeleton, 3)
-        result = np.genfromtxt("src/test/csv/potential_landmarks_test.csv", delimiter=',')
+        result = np.genfromtxt("retipy/test/csv/potential_landmarks_test.csv", delimiter=',')
 
         assert_array_equal(result, landmarks, "landmark points does not match")
 
@@ -48,7 +48,7 @@ class TestLandmarks(TestCase):
         skeleton = self.image.get_uint_image()
         landmarks = l.potential_landmarks(skeleton, 3)
         widths = l.vessel_width(threshold, landmarks)
-        result = np.genfromtxt("src/test/csv/vessel_widths_test.csv", delimiter=',')
+        result = np.genfromtxt("retipy/test/csv/vessel_widths_test.csv", delimiter=',')
 
         assert_array_equal(result, widths, "Vessel widths does not match")
 
@@ -63,7 +63,7 @@ class TestLandmarks(TestCase):
         landmarks = l.potential_landmarks(skeleton, 3)
         widths = l.vessel_width(threshold, landmarks)
         vessels = l.finding_landmark_vessels(widths, landmarks, skeleton, skeleton_rgb)
-        result = np.genfromtxt("src/test/csv/finding_landmark_vessels_test.csv", delimiter=',')
+        result = np.genfromtxt("retipy/test/csv/finding_landmark_vessels_test.csv", delimiter=',')
 
         assert_array_equal(result, vessels[0], "Landmark vessels does not match")
 
@@ -79,8 +79,8 @@ class TestLandmarks(TestCase):
         widths = l.vessel_width(threshold, landmarks)
         vessels = l.finding_landmark_vessels(widths, landmarks, skeleton, skeleton_rgb)
         marked_skeleton, final_landmarks = l.vessel_number(vessels, landmarks, skeleton_rgb)
-        result_skeleton = np.genfromtxt("src/test/csv/vessel_number_skeleton_test.csv", delimiter=',')
-        result_landmarks = np.genfromtxt("src/test/csv/vessel_number_filter_test.csv", delimiter=',')
+        result_skeleton = np.genfromtxt("retipy/test/csv/vessel_number_skeleton_test.csv", delimiter=',')
+        result_landmarks = np.genfromtxt("retipy/test/csv/vessel_number_filter_test.csv", delimiter=',')
 
         assert_array_equal(result_skeleton, marked_skeleton[20, :], "Vessel skeleton does not match")
         assert_array_equal(result_landmarks, final_landmarks, "Vessel final landmarks does not match")
@@ -98,16 +98,16 @@ class TestLandmarks(TestCase):
         vessels = l.finding_landmark_vessels(widths, landmarks, skeleton, skeleton_rgb)
         marked_skeleton, final_landmarks = l.vessel_number(vessels, landmarks, skeleton_rgb)
         bifurcations, crossings = l.principal_boxes(marked_skeleton, final_landmarks, 2)
-        result = np.genfromtxt("src/test/csv/boxes_bifurcations_test.csv", delimiter=',')
-        result2 = np.genfromtxt("src/test/csv/boxes_crossings_test.csv", delimiter=',')
+        result = np.genfromtxt("retipy/test/csv/boxes_bifurcations_test.csv", delimiter=',')
+        result2 = np.genfromtxt("retipy/test/csv/boxes_crossings_test.csv", delimiter=',')
 
         assert_array_equal(result, bifurcations[0], "Bifurcation points does not match")
         assert_array_equal(result2, crossings[0], "Crossing points does not match")
 
     def test_classification(self):
         bifurcations, crossings = l.classification(self.image.np_image, 2)
-        result = np.genfromtxt("src/test/csv/boxes_bifurcations_test.csv", delimiter=',')
-        result2 = np.genfromtxt("src/test/csv/boxes_crossings_test.csv", delimiter=',')
+        result = np.genfromtxt("retipy/test/csv/boxes_bifurcations_test.csv", delimiter=',')
+        result2 = np.genfromtxt("retipy/test/csv/boxes_crossings_test.csv", delimiter=',')
 
         assert_array_equal(result, bifurcations[0], "Bifurcation points does not match")
         assert_array_equal(result2, crossings[0], "Crossing points does not match")

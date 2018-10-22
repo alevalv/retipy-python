@@ -19,8 +19,8 @@ Module with endpoints related to server functionality and status.
 """
 
 import flask
-from retipy.server import app
-from retipy.server import base_url
+from . import app
+from . import base_url
 
 
 @app.route(base_url + "status", methods=["GET"])

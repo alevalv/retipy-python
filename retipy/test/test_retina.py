@@ -27,7 +27,7 @@ from skimage.morphology import skeletonize
 
 from retipy import retina
 
-_resources = 'src/resources/images/'
+_resources = 'retipy/resources/images/'
 _image_file_name = 'img01.png'
 _image_path = _resources + _image_file_name
 

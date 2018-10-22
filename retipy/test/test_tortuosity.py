@@ -14,28 +14,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""tests for tortuosity endpoint module"""
+"""tests for tortuosity module"""
 
-import json
-import sys
-from retipy.retina import Retina
-from retipy.server import app
 from unittest import TestCase
-
-class TestTortuosityEndpoint(TestCase):
-    _resources = 'src/resources/images/'
+from retipy.retina import Retina
+from retipy import tortuosity as t
+class TestTortuosity(TestCase):
+    _resources = 'retipy/resources/images/'
     _image_file_name = 'img01.png'
     _image_path = _resources + _image_file_name
 
     def setUp(self):
+        self.image = Retina(None, self._image_path)
 
-        self.image = Retina(None, self._image_path).original_base64
-        self.app = app.test_client()
+    def test_density(self):
+        result = t.density(self.image.np_image)
+        self.assertEqual(result["uri"], "tortuosity_density", "uri does not match")
+        self.assertEqual(len(result["data"]), 3, "data size does not match")
 
-    def test_density_no_success(self):
-        response = self.app.post("/retipy/tortuosity/density")
-        self.assertEqual(json.loads(response.get_data().decode(sys.getdefaultencoding())), {'success': False})
-
-    def test_fractal_no_success(self):
-        response = self.app.post("/retipy/tortuosity/fractal")
-        self.assertEqual(json.loads(response.get_data().decode(sys.getdefaultencoding())), {'success': False})
+    def test_fractal(self):
+        result = t.fractal(self.image.np_image)
+        self.assertEqual(result["uri"], "fractal_dimension", "uri does not match")
+        self.assertEqual(len(result["data"]), 16, "data size does not match")

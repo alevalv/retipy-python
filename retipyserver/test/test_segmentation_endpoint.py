@@ -19,11 +19,11 @@
 import json
 import sys
 from retipy.retina import Retina
-from retipy.server import app
+from retipyserver import app
 from unittest import TestCase
 
 class TestSegmentationEndpoint(TestCase):
-    _resources = 'src/resources/images/'
+    _resources = 'retipy/resources/images/'
     _image_file_name = 'img01.png'
     _image_path = _resources + _image_file_name
 

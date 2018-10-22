@@ -20,14 +20,14 @@ All operations are implemented as POST
 """
 
 import base64
-import flask
 import io
-from retipy.server import app
-from retipy.server import base_url
+import flask
 import numpy as np
-from retipy import retina_grayscale
 from PIL import Image
 import cv2
+from retipy import retina_grayscale
+from . import app
+from . import base_url
 
 segmentation_url = base_url + "segmentation/"
 

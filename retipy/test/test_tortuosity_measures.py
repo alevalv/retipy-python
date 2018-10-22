@@ -80,7 +80,7 @@ class TestTortuosityMeasures(TestCase):
 
     def test_fractal_tortuosity(self):
         self.assertAlmostEqual(
-            tm.fractal_tortuosity(retina.Retina(None, "src/resources/images/img01.png")),
+            tm.fractal_tortuosity(retina.Retina(None, "retipy/resources/images/img01.png")),
             1.703965,
             msg="fractal tortuosity does not match",
             delta=0.00001)

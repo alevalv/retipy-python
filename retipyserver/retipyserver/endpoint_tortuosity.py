@@ -1,5 +1,5 @@
 # Retipy - Retinal Image Processing on Python
-# Copyright (C) 2018  Maria Aguiar
+# Copyright (C) 2018  Alejandro Valdes
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Module with all REST endpoints to identify and classify landmarks given a grayscale image
+Module with all REST endpoints to calculate tortuosity measures given a grayscale image
 All operations are implemented as POST
 """
 
@@ -24,15 +24,15 @@ import flask
 import io
 import numpy as np
 from PIL import Image
-from retipy import landmarks
-from retipy.server import app
-from retipy.server import base_url
+from retipy import tortuosity
+from . import app
+from . import base_url
 
-landmarks_url = base_url + "landmarks/"
+tortuosity_url = base_url + "tortuosity/"
 
 
-@app.route(landmarks_url + "classification", methods=["POST"])
-def post_landmarks_classification():
+@app.route(tortuosity_url + "density", methods=["POST"])
+def post_tortuosity_density():
     data = {"success": False}
 
     if flask.request.method == "POST":
@@ -40,6 +40,18 @@ def post_landmarks_classification():
         if json is not None:  # pragma: no cover
             image = base64.b64decode(json["image"])
             image = Image.open(io.BytesIO(image)).convert('L')
-            bifurcations_data, crossings_data = landmarks.classification(np.array(image), 20)
-            data = {"bifurcations": bifurcations_data, "crossings": crossings_data}
+            data = tortuosity.density(np.array(image))
+    return flask.jsonify(data)
+
+
+@app.route(tortuosity_url + "fractal", methods=["POST"])
+def post_tortuosity_fractal():
+    data = {"success": False}
+
+    if flask.request.method == "POST":
+        json = flask.request.get_json(silent=True)
+        if json is not None:  # pragma: no cover
+            image = base64.b64decode(json["image"])
+            image = Image.open(io.BytesIO(image)).convert('L')
+            data = tortuosity.fractal(np.array(image))
     return flask.jsonify(data)

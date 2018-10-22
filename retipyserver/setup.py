@@ -17,9 +17,9 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="retipy",
+    name="retipyserver",
     version="0.0.1.dev0",
-    description="retinal image processing on python",
+    description="retinal image processing on python - flask server",
     author="Alejandro Valdes",
     author_email="alejandrovaldes@live.com",
     license="GPLv3",
@@ -30,8 +30,8 @@ setup(
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-        'Programming Language :: Python :: 3.6'
+        'Programming Language :: Python :: 3.7'
     ],
     packages=find_packages(exclude=["test", "util"]),
-    install_requires=['matplotlib', 'numpy', 'pillow', 'scikit-image', 'scipy', 'h5py', 'scikit-learn', 'flask']
+    install_requires=['retipy', 'flask']
     )

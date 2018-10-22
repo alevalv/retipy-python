@@ -26,7 +26,7 @@ from skimage import color, filters, io
 import cv2
 from retipy import retina_grayscale
 
-_resources = 'src/test/resources/images/'
+_resources = 'retipy/test/resources/images/'
 _image_file_name = 'test_image.pgm'
 _image_file_name_2 = '01_h.jpg'
 _image_path = _resources + _image_file_name
