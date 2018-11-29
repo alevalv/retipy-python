@@ -206,7 +206,7 @@ class Retina_grayscale(object):
         self.homogenize()
         IH = cv2.GaussianBlur(self.IH, (3, 3), 1.72).astype(np.uint8)
         ret, normal_vessels_segmentation = cv2.threshold(IH, 0, 255, cv2.THRESH_OTSU)
-        _, npaContours, hierarchy = cv2.findContours(normal_vessels_segmentation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        npaContours, hierarchy = cv2.findContours(normal_vessels_segmentation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         for npaContour in npaContours:
             if (cv2.contourArea(npaContour) < self.normal_vessels_segmentation_min_value):  # 100
                 cv2.drawContours(normal_vessels_segmentation, [npaContour], -1, (255, 255, 255), -1)
@@ -227,7 +227,7 @@ class Retina_grayscale(object):
         kernel = np.ones((self.kernel_erode, self.kernel_erode), np.uint8)
         tiny_vessels_segmentation = cv2.erode(tiny_vessels_segmentation, kernel, iterations=1)
 
-        _, npaContours, hierarchy = cv2.findContours(tiny_vessels_segmentation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        npaContours, hierarchy = cv2.findContours(tiny_vessels_segmentation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         for npaContour in npaContours:
             if (cv2.contourArea(npaContour) < self.tiny_vessels_segmentation_min_value):  # pragma: no cover
                 cv2.drawContours(tiny_vessels_segmentation, [npaContour], -1, (0, 0, 0), -1) # 250
@@ -241,8 +241,7 @@ class Retina_grayscale(object):
         final_vessels_segmentation = cv2.dilate(final_vessels_segmentation, kernel, iterations=1)
         final_vessels_segmentation = abs(255 - final_vessels_segmentation)
 
-
-        _, npaContours, hierarchy = cv2.findContours(final_vessels_segmentation.astype(np.uint8), cv2.RETR_TREE,
+        npaContours, hierarchy = cv2.findContours(final_vessels_segmentation.astype(np.uint8), cv2.RETR_TREE,
                                                      cv2.CHAIN_APPROX_SIMPLE)
         for npaContour in npaContours:
             (x, y), radius = cv2.minEnclosingCircle(npaContour)
@@ -252,7 +251,7 @@ class Retina_grayscale(object):
 
         final_vessels_segmentation = abs(255 - final_vessels_segmentation)
 
-        _, npaContours, hierarchy = cv2.findContours(final_vessels_segmentation.astype(np.uint8), cv2.RETR_TREE,
+        npaContours, hierarchy = cv2.findContours(final_vessels_segmentation.astype(np.uint8), cv2.RETR_TREE,
                                                      cv2.CHAIN_APPROX_SIMPLE)
         for npaContour in npaContours:
             (x, y), radius = cv2.minEnclosingCircle(npaContour)

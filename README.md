@@ -12,6 +12,8 @@ Installation
 
 ### Development Environment
 
+This project uses [OpenCV](https://opencv.org/) 4.0.0. Any version older than 4 will not work.
+
 To use this project locally and be able to make changes to the retipy code, you can run the following command in
 your console (having python3 and pip installed):
 

@@ -1,6 +1,12 @@
-FROM jjanzic/docker-python3-opencv
+FROM base/archlinux:2018.11.01
 
 LABEL maintainer="Alejandro Valdes <alejandrovaldes@live.com>"
+
+RUN echo 'Server = http://mirrors.udenar.edu.co/archlinux/$repo/os/$arch' > /etc/pacman.d/mirrorlist
+
+RUN pacman -Sy intel-tbb openexr gst-plugins-base libdc1394 cblas lapack libgphoto2 jasper ffmpeg cmake python-numpy python2-numpy mesa eigen hdf5 lapacke gtk3 vtk glew python-pip --noconfirm
+
+RUN pacman -Sy opencv --noconfirm
 
 ENV NB_USER retipy
 ENV NB_UID 1000
@@ -38,7 +44,7 @@ RUN pip install --user -e /opt/retipy/retipy/ && \
 RUN pip install --user -e /opt/retipy/retipyserver/
 
 ENV PATH /home/retipy/.local/bin:${PATH}
-ENV FLASK_APP retipy-server
+ENV FLASK_APP retipyserver
 
 EXPOSE 5000
 
