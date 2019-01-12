@@ -40,8 +40,6 @@ _postprocessing_path = _resources + 'postProcessing.pgm'
 _manual_result_path = _resources + 'result.pgm'
 
 
-
-
 class TestRetinaGrayscale(TestCase):
     """Test class for Retina class"""
 
@@ -98,8 +96,9 @@ class TestRetinaGrayscale(TestCase):
         self.image.top_hat(3)
         original_image = retina_grayscale.Retina_grayscale(None, _image_path, 1)
         assert_array_equal(self.image.np_image,
-                           cv2.morphologyEx(original_image.np_image, cv2.MORPH_TOPHAT, cv2.getStructuringElement(cv2.MORPH_RECT, (
-                           3, 3))))
+                           cv2.morphologyEx(original_image.np_image, cv2.MORPH_TOPHAT,
+                                            cv2.getStructuringElement(cv2.MORPH_RECT, (
+                                                3, 3))))
 
     def test_mean_filter(self):
         self.image.mean_filter(3)
@@ -138,12 +137,12 @@ class TestRetinaGrayscale(TestCase):
 
     def test_double_vessels_segmentation(self):
         double_segmentation = self.image.double_segmentation()
-        other_segmentation = retina_grayscale.Retina_grayscale(None, _image_path, 1).double_segmentation()
+        other_segmentation = retina_grayscale.Retina_grayscale(None, _image_path,
+                                                               1).double_segmentation()
         assert_array_equal(double_segmentation, other_segmentation)
 
     def test_calculate_roc(self):
         double_segmentation = self.image.normal_vessels_segmentation()
         original_image = retina_grayscale.Retina_grayscale(None, _manual_result_path, 1)
-        self.image.calculate_roc(double_segmentation/255, original_image.np_image/255)
-        assert_array_equal(self.image.roc, [[ 425.,  304.,  423.,  299., 1451.]])
-
+        self.image.calculate_roc(double_segmentation / 255, original_image.np_image / 255)
+        np.testing.assert_allclose(self.image.roc, [[425., 304., 423., 299., 1451.]], 1e-2)
