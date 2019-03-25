@@ -21,14 +21,14 @@ import cv2
 from retipy import retina
 
 
-def potential_landmarks(image: np.ndarray, kernel: int):
-    binary = image.copy()
-    binary[binary == 255] = 1
-    result = image.copy()
-    n = int(np.floor(kernel / 2))
+def potential_landmarks(skeleton_img: np.ndarray, kernel: int):
     potential = []
-    for it_x in range(n, image.shape[0] - n):
-        for it_y in range(n, image.shape[1] - n):
+    binary = skeleton_img.copy()
+    binary[binary == 255] = 1
+    result = skeleton_img.copy()
+    n = int(np.floor(kernel / 2))
+    for it_x in range(n, binary.shape[0] - n):
+        for it_y in range(n, binary.shape[1] - n):
             aux = 0
             if binary[it_x, it_y] == 1:
                 aux += np.sum(binary[it_x - n:it_x + n + 1, it_y - n:it_y + n + 1])
@@ -38,7 +38,7 @@ def potential_landmarks(image: np.ndarray, kernel: int):
                 elif aux >= 5:
                     result[it_x, it_y] = 0
                     potential.append([it_x, it_y])
-    return potential
+    return potential, result
 
 
 def vessel_width(thresholded_image: np.ndarray, landmarks: list):
@@ -86,7 +86,7 @@ def finding_landmark_vessels(widths: list, landmarks: list, skeleton: np.ndarray
     for l in range(0, len(widths)):
         cgray = skeleton.copy()
         crgb = skeleton_rgb.copy()
-        radius = int(np.ceil(widths[l][1] + widths[l][2] * 1.4))
+        radius = int(np.ceil(widths[l][1] + widths[l][2] * 1.5))
         x0 = landmarks[l][0]
         y0 = landmarks[l][1]
         points = []
@@ -146,7 +146,7 @@ def vessel_number(vessels: list, landmarks: list, skeleton_rgb: np.ndarray):
         if len(vessels[v]) == 3:
             skeleton[landmarks[v][0], landmarks[v][1]] = [0, 0, 255]
             final_landmarks.append(landmarks[v])
-        elif len(vessels[v]) == 4:
+        elif len(vessels[v]) >= 4:
             skeleton[landmarks[v][0], landmarks[v][1]] = [255, 0, 0]
             final_landmarks.append(landmarks[v])
 
@@ -200,7 +200,7 @@ def classification(image: np.ndarray, border_size: int):
     img.bin_to_bgr()
     skeleton_rgb = img.get_uint_image()
 
-    landmarks = potential_landmarks(skeleton, 3)
+    landmarks, segmented = potential_landmarks(skeleton, 3)
     widths = vessel_width(threshold, landmarks)
     vessels = finding_landmark_vessels(widths, landmarks, skeleton, skeleton_rgb)
     marked_skeleton, final_landmarks = vessel_number(vessels, landmarks, skeleton_rgb)

@@ -92,6 +92,12 @@ class TestRetinaGrayscale(TestCase):
         assert_array_equal(self.image.np_image,
                            ndimage.grey_opening(original_image.np_image, size=(3, 3)))
 
+    def test_closing(self):
+        self.image.closing(3)
+        original_image = retina_grayscale.Retina_grayscale(None, _image_path, 1)
+        assert_array_equal(self.image.np_image,
+                           ndimage.grey_closing(original_image.np_image, size=(3, 3)))
+
     def test_top_hat(self):
         self.image.top_hat(3)
         original_image = retina_grayscale.Retina_grayscale(None, _image_path, 1)
