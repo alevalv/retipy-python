@@ -156,8 +156,8 @@ def feature_vectors():
     directory = base_directory_training + "original/"
     features = []
     for filename in sorted(glob.glob(os.path.join(directory, '*.tif'))):
-        name = filename.split("\\")
-        name = name[-1].split(".")[0]
+        name = os.path.basename(filename)
+        name = name.split(".")[0]
 
         original = cv2.imread(filename, 1)
         gray = cv2.imread(filename, 0)
