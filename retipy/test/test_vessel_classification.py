@@ -41,7 +41,8 @@ class TestVesselClassification(TestCase):
         threshold = self.manual.get_uint_image()
         self.manual.skeletonization()
         skeleton = self.manual.get_uint_image()
-        widths = vc.vessel_widths(skeleton, threshold)
+        landmarks, segmented = l.potential_landmarks(skeleton, 3)
+        widths = vc.vessel_widths(segmented, threshold)
 
         result = np.genfromtxt(self._test_path + "vessels_width_test.csv", delimiter=',')
         assert_array_equal(result, widths[0:10], "Vessel widths does not match")
@@ -72,7 +73,8 @@ class TestVesselClassification(TestCase):
         gray = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
         lab = cv2.cvtColor(self.original, cv2.COLOR_BGR2LAB)
         L, A, B = cv2.split(lab)
-        widths = vc.vessel_widths(skeleton, threshold)
+        landmarks, segmented = l.potential_landmarks(skeleton, 3)
+        widths = vc.vessel_widths(segmented, threshold)
         features = vc.preparing_data(widths, 6, self.original, self.av, L, gray)
 
         result = np.genfromtxt(self._test_path + "preparing_data_test.csv", delimiter=',')
@@ -86,7 +88,8 @@ class TestVesselClassification(TestCase):
         gray = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
         lab = cv2.cvtColor(self.original, cv2.COLOR_BGR2LAB)
         L, A, B = cv2.split(lab)
-        widths = vc.vessel_widths(skeleton, threshold)
+        landmarks, segmented = l.potential_landmarks(skeleton, 3)
+        widths = vc.vessel_widths(segmented, threshold)
         features = vc.preparing_data(widths, 6, self.original, None, L, gray)
 
         result = np.genfromtxt(self._test_path + "preparing_data_without_av_test.csv", delimiter=',')
@@ -111,7 +114,7 @@ class TestVesselClassification(TestCase):
     def test_validating_model(self):
         features, segments, thr, predictions = vc.loading_model(self.original, self.manual, self.av, 38)
         acc = vc.validating_model(features, segments, self.original, predictions, 38, 1)
-        self.assertEqual(81.1214953271028, acc,  "Wrong validation, should return 81.1214953271028")
+        self.assertEqual(76.18243243243244, acc,  "Wrong validation, should return 81.1214953271028")
 
     def test_validating_model_without_av(self):
         features, segments, thr, predictions = vc.loading_model(self.original, self.manual, self.av, 38)
@@ -155,7 +158,7 @@ class TestVesselClassification(TestCase):
     def test_normalize_indexes(self):
         features, segments, thr, predictions = vc.loading_model(self.original, self.manual, self.av, 38)
         connected_components = cv2.connectedComponentsWithStats(segments.astype(np.uint8), 4, cv2.CV_32S)
-        normal = vc.normalize_indexes(connected_components, 4)
+        normal = vc.normalize_indexes(connected_components, 7)
 
         result = np.genfromtxt(self._test_path + "normalize_indexes_test.csv", delimiter=',')
         assert_array_equal(result, normal, "Width and color do not match")
@@ -191,7 +194,7 @@ class TestVesselClassification(TestCase):
         post_img = vc.postprocessing(connected_components, thr, bifurcations, rgb_img)
         acc = vc.accuracy(post_img, segments, self.av)
 
-        assert_array_equal([0.9599465954606141, 1.0, 0.9195710455764075], acc, "Accuracy does not match")
+        assert_array_equal([0.8447412353923205, 0.7686274509803922, 0.9011627906976745], acc, "Accuracy does not match")
 
     def test_classification(self):
         post_img = vc.classification(self.original, self.manual)
