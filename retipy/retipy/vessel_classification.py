@@ -404,15 +404,6 @@ def postprocessing(connected_components: np.ndarray, thr_img: np.ndarray, bifurc
         else:
             if not(all(maxwidth[1] == [255, 255, 255])):
                 coloring(connected_components, triplet, maxwidth[1], rgb)
-            elif red[0] == 1 and blue[0] == 1:
-                if blue[1] > red[1]:
-                    coloring(connected_components, triplet, [255, 0, 0], rgb)
-                else:
-                    coloring(connected_components, triplet, [0, 0, 255], rgb)
-            elif red[0] > blue[0]:
-                coloring(connected_components, triplet, [0, 0, 255], rgb)
-            elif blue[0] > red[0]:
-                coloring(connected_components, triplet, [255, 0, 0], rgb)
 
     return rgb
 
