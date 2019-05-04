@@ -130,6 +130,14 @@ class Retina_grayscale(object):
         self._copy()
         self.np_image = ndimage.grey_opening(self.np_image, size=(size_structure, size_structure))
 
+    def closing(self, size_structure):
+        """
+        erodes and dilates the stored image, by default the structure is a cross
+        :param size_structure: size of kernel to apply in the filter
+        """
+        self._copy()
+        self.np_image = ndimage.grey_closing(self.np_image, size=(size_structure, size_structure))
+
     def top_hat(self, size_structuring_element):
         """
         Applies Top-hat filter
