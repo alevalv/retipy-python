@@ -9,13 +9,13 @@ from retipy import landmarks as l
 
 """Module with operations related to classify vessels into arteries and veins."""
 
-base_directory_training = 'retipy/resources/images/drive/training/'
-base_directory_test = 'retipy/resources/images/drive/test/'
-base_directory_postprocessing = 'retipy/resources/images/postprocessing/'
-base_directory_model = 'retipy/resources/model/'
+_base_directory_training = 'retipy/resources/images/drive/training/'
+_base_directory_test = 'retipy/resources/images/drive/test/'
+_base_directory_postprocessing = 'retipy/resources/images/postprocessing/'
+_base_directory_model = 'retipy/resources/model/'
 
 
-def vessel_widths(center_img: np.ndarray, segmented_img: np.ndarray):
+def _vessel_widths(center_img: np.ndarray, segmented_img: np.ndarray):
     image = segmented_img.copy()
     widths = []
     for i in range(0, image.shape[0]):
@@ -62,7 +62,7 @@ def vessel_widths(center_img: np.ndarray, segmented_img: np.ndarray):
     return widths
 
 
-def local_binary_pattern(window: np.ndarray):
+def _local_binary_pattern(window: list):
     x = [0, 0, 1, 2, 2, 2, 1, 0]
     y = [1, 2, 2, 2, 1, 0, 0, 0]
     decimal = 0
@@ -73,7 +73,7 @@ def local_binary_pattern(window: np.ndarray):
     return decimal
 
 
-def preparing_data(widths: list, sections: int, original_img: np.ndarray, classified_img: np.ndarray,
+def _preparing_data(widths: list, sections: int, original_img: np.ndarray, classified_img: np.ndarray,
                    bright_img: np.ndarray, gray_img: np.ndarray):
     f_vectors = []
     if classified_img is not None:
@@ -87,18 +87,18 @@ def preparing_data(widths: list, sections: int, original_img: np.ndarray, classi
                 elif np.array_equal(classified_img[w0, w1], [0, 0, 255]):
                     out = 1
 
-                iv = vector(w, sections, original_img, bright_img, gray_img, out)
+                iv = _vector(w, sections, original_img, bright_img, gray_img, out)
                 f_vectors.append(iv)
     else:
         for w in widths:
             if (w[3] + w[4]) >= 2:
-                iv = vector(w, sections, original_img, bright_img, gray_img, -1)
+                iv = _vector(w, sections, original_img, bright_img, gray_img, -1)
                 f_vectors.append(iv)
 
     return f_vectors
 
 
-def vector(w: list, sections: int, original_img: np.ndarray, bright_img: np.ndarray, gray_img: np.ndarray, out: int):
+def _vector(w: list, sections: int, original_img: np.ndarray, bright_img: np.ndarray, gray_img: np.ndarray, out: int):
     iv = []
     w0 = w[0]
     w1 = w[1]
@@ -111,7 +111,7 @@ def vector(w: list, sections: int, original_img: np.ndarray, bright_img: np.ndar
             step = int(np.floor(y - (i * section)))
             iv.extend(original_img[w0, step])
             iv.extend([bright_img[w0, step]])
-            iv.extend([local_binary_pattern(gray_img[w0 - 1:w0 + 2, step - 1:step + 2])])
+            iv.extend([_local_binary_pattern(gray_img[w0 - 1:w0 + 2, step - 1:step + 2])])
         iv.extend([w[3] + w[4]])
         iv.extend([out])
     elif angle == 45:
@@ -123,7 +123,7 @@ def vector(w: list, sections: int, original_img: np.ndarray, bright_img: np.ndar
             stepy = int(np.floor(y - (i * section)))
             iv.extend(original_img[stepx, stepy])
             iv.extend([bright_img[stepx, stepy]])
-            iv.extend([local_binary_pattern(gray_img[stepx - 1:stepx + 2, stepy - 1:stepy + 2])])
+            iv.extend([_local_binary_pattern(gray_img[stepx - 1:stepx + 2, stepy - 1:stepy + 2])])
         iv.extend([w[3] + w[4]])
         iv.extend([out])
     elif angle == 90:
@@ -133,7 +133,7 @@ def vector(w: list, sections: int, original_img: np.ndarray, bright_img: np.ndar
             step = int(np.floor(x + (i * section)))
             iv.extend(original_img[step, w1])
             iv.extend([bright_img[step, w1]])
-            iv.extend([local_binary_pattern(gray_img[step - 1:step + 2, w1 - 1:w1 + 2])])
+            iv.extend([_local_binary_pattern(gray_img[step - 1:step + 2, w1 - 1:w1 + 2])])
         iv.extend([w[3] + w[4]])
         iv.extend([out])
     elif angle == 135:
@@ -145,15 +145,15 @@ def vector(w: list, sections: int, original_img: np.ndarray, bright_img: np.ndar
             stepy = int(np.floor(y + (i * section)))
             iv.extend(original_img[stepx, stepy])
             iv.extend([bright_img[stepx, stepy]])
-            iv.extend([local_binary_pattern(gray_img[stepx - 1:stepx + 2, stepy - 1:stepy + 2])])
+            iv.extend([_local_binary_pattern(gray_img[stepx - 1:stepx + 2, stepy - 1:stepy + 2])])
         iv.extend([w[3] + w[4]])
         iv.extend([out])
 
     return iv
 
 
-def feature_vectors():
-    directory = base_directory_training + "original/"
+def _feature_vectors():
+    directory = _base_directory_training + "original/"
     features = []
     for filename in sorted(glob.glob(os.path.join(directory, '*.tif'))):
         name = os.path.basename(filename)
@@ -166,7 +166,7 @@ def feature_vectors():
         lab = cv2.cvtColor(original, cv2.COLOR_BGR2LAB)
         L, A, B = cv2.split(lab)
 
-        manual = retina.Retina(None, base_directory_training + "manual/" + name + ".png")
+        manual = retina.Retina(None, _base_directory_training + "manual/" + name + ".png")
         manual.threshold_image()
         thr_img = manual.get_uint_image()
         cv2.circle(thr_img, maxLoc, 60, 0, -1)
@@ -175,26 +175,26 @@ def feature_vectors():
         cv2.circle(skeleton_img, maxLoc, 60, 0, -1)
         landmarks, segmented_skeleton_img = l.potential_landmarks(skeleton_img, 3)
 
-        av = cv2.imread(base_directory_training + "av/" + name + ".png", 1)
+        av = cv2.imread(_base_directory_training + "av/" + name + ".png", 1)
 
-        widths = vessel_widths(segmented_skeleton_img, thr_img)
-        data = preparing_data(widths, 6, original, av, L, gray)
+        widths = _vessel_widths(segmented_skeleton_img, thr_img)
+        data = _preparing_data(widths, 6, original, av, L, gray)
         features.extend(data)
 
-    h5f = h5py.File(base_directory_model + 'vector_features_interpolation.h5', 'w')
+    h5f = h5py.File(_base_directory_model + 'vector_features_interpolation.h5', 'w')
     h5f.create_dataset('training', data=features)
     return features
 
 
-def loading_model(original: np.ndarray, manual, av: np.ndarray, size: int):
+def _loading_model(original: np.ndarray, manual, av: np.ndarray, size: int):
     # Load model of the neuronal network
-    json_file = open(base_directory_model + 'modelVA.json', "r")
+    json_file = open(_base_directory_model + 'modelVA.json', "r")
     loaded_model_json = json_file.read()
     json_file.close()
     loaded_model = model_from_json(loaded_model_json)
 
     # Load weights
-    loaded_model.load_weights(base_directory_model + 'modelVA.h5')
+    loaded_model.load_weights(_base_directory_model + 'modelVA.h5')
 
     gray = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
     (minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(gray)
@@ -209,8 +209,8 @@ def loading_model(original: np.ndarray, manual, av: np.ndarray, size: int):
     cv2.circle(skeleton_img, maxLoc, 60, 0, -1)
     landmarks, segmented_skeleton_img = l.potential_landmarks(skeleton_img, 3)
 
-    widths = vessel_widths(segmented_skeleton_img, thr_img)
-    data = preparing_data(widths, 6, original, av, L, gray)
+    widths = _vessel_widths(segmented_skeleton_img, thr_img)
+    data = _preparing_data(widths, 6, original, av, L, gray)
 
     features = np.array(data)
     predict_img = np.full((segmented_skeleton_img.shape[0], segmented_skeleton_img.shape[1]), 3, dtype=float)
@@ -222,7 +222,7 @@ def loading_model(original: np.ndarray, manual, av: np.ndarray, size: int):
     return features, segmented_skeleton_img, thr_img, predict_img
 
 
-def validating_model(features: np.ndarray, skeleton_img: np.ndarray, original_img: np.ndarray, predicted_img: np.ndarray, size: int, av: int):
+def _validating_model(features: np.ndarray, skeleton_img: np.ndarray, original_img: np.ndarray, predicted_img: np.ndarray, size: int, av: int):
     max_acc = -1
     if av == 0:
         manual_copy = retina.Retina(skeleton_img, None)
@@ -244,9 +244,9 @@ def validating_model(features: np.ndarray, skeleton_img: np.ndarray, original_im
                 manual_copy[features[row, 0], features[row, 1]] = [255, 0, 0]
                 original_copy[features[row, 0], features[row, 1]] = [255, 0, 0]
 
-        cv2.imwrite(base_directory_postprocessing + "rgb_prediction.png", manual_copy)
-        cv2.imwrite(base_directory_postprocessing + "network_prediction.png", predict_copy)
-        cv2.imwrite(base_directory_postprocessing + "original.png", original_copy)
+        cv2.imwrite(_base_directory_postprocessing + "rgb_prediction.png", manual_copy)
+        cv2.imwrite(_base_directory_postprocessing + "network_prediction.png", predict_copy)
+        cv2.imwrite(_base_directory_postprocessing + "original.png", original_copy)
     else:
         for i in range(0, 1000):
             manual_copy = retina.Retina(skeleton_img, None)
@@ -285,19 +285,19 @@ def validating_model(features: np.ndarray, skeleton_img: np.ndarray, original_im
             accy = (100 * (true_positive+true_negative)) / features.shape[0]
             if max_acc < accy:
                 max_acc = accy
-                cv2.imwrite(base_directory_postprocessing + "rgb_prediction.png", manual_copy)
-                cv2.imwrite(base_directory_postprocessing + "network_prediction.png", predict_copy)
-                cv2.imwrite(base_directory_postprocessing + "original.png", original_copy)
+                cv2.imwrite(_base_directory_postprocessing + "rgb_prediction.png", manual_copy)
+                cv2.imwrite(_base_directory_postprocessing + "network_prediction.png", predict_copy)
+                cv2.imwrite(_base_directory_postprocessing + "original.png", original_copy)
 
     return max_acc
 
 
-def homogenize(connected_components: np.ndarray):
+def _homogenize(connected_components: np.ndarray):
     # Imagen en con 0, 1, 2
-    result_image = cv2.imread(base_directory_postprocessing + "network_prediction.png", 0)
+    result_image = cv2.imread(_base_directory_postprocessing + "network_prediction.png", 0)
     # Imagen a color del resultado de la red
-    final_image = cv2.imread(base_directory_postprocessing + "rgb_prediction.png", 1)
-    img_rgb = cv2.imread(base_directory_postprocessing + "original.png", 1)
+    final_image = cv2.imread(_base_directory_postprocessing + "rgb_prediction.png", 1)
+    img_rgb = cv2.imread(_base_directory_postprocessing + "original.png", 1)
 
     for x in range(1, connected_components[0]):
         mask = connected_components[1] != x
@@ -330,7 +330,7 @@ def homogenize(connected_components: np.ndarray):
     return final_image, img_rgb
 
 
-def box_labels(bifurcations: list, c_components: np.ndarray):
+def _box_labels(bifurcations: list, c_components: np.ndarray):
     connected_vessels = []
     for b in bifurcations:
         labels = c_components[1]
@@ -341,7 +341,7 @@ def box_labels(bifurcations: list, c_components: np.ndarray):
     return connected_vessels
 
 
-def average(widths: list):
+def _average(widths: list):
     acum = 0
     for w in widths:
         acum += w[1]+w[2]
@@ -349,7 +349,7 @@ def average(widths: list):
     return acum
 
 
-def normalize_indexes(connected_matrix: np.ndarray, label: int):
+def _normalize_indexes(connected_matrix: np.ndarray, label: int):
     labeled = connected_matrix[1]
     indexes = np.where(labeled == label)
     formatted_index = []
@@ -359,30 +359,30 @@ def normalize_indexes(connected_matrix: np.ndarray, label: int):
     return formatted_index
 
 
-def average_width(connected_matrix: np.ndarray, connected: list, thr_img: np.ndarray, final_image: np.ndarray):
+def _average_width(connected_matrix: np.ndarray, connected: list, thr_img: np.ndarray, final_image: np.ndarray):
     connected_avg = []
     for c in connected:
-        formatted_indexes = normalize_indexes(connected_matrix, c)
+        formatted_indexes = _normalize_indexes(connected_matrix, c)
         label_widths = l.vessel_width(thr_img, formatted_indexes)
         index = int(len(formatted_indexes)/2)
-        connected_avg.extend([average(label_widths), final_image[formatted_indexes[index][0], formatted_indexes[index][1]]])
+        connected_avg.extend([_average(label_widths), final_image[formatted_indexes[index][0], formatted_indexes[index][1]]])
     return connected_avg
 
 
-def coloring(connected_matrix: np.ndarray, box: list, rgb: list, skeleton: np.ndarray):
+def _coloring(connected_matrix: np.ndarray, box: list, rgb: list, skeleton: np.ndarray):
     for segment_label in box:
-        formatted_indexes = normalize_indexes(connected_matrix, segment_label)
+        formatted_indexes = _normalize_indexes(connected_matrix, segment_label)
         for index in formatted_indexes:
             skeleton[index[0], index[1]] = rgb
     return skeleton[index[0], index[1]]
 
 
-def postprocessing(connected_components: np.ndarray, thr_img: np.ndarray, bifurcs: list, final_img: np.ndarray):
+def _postprocessing(connected_components: np.ndarray, thr_img: np.ndarray, bifurcs: list, final_img: np.ndarray):
     rgb = final_img.copy()
 
-    connected_vessels = box_labels(bifurcs, connected_components)
+    connected_vessels = _box_labels(bifurcs, connected_components)
     for triplet in connected_vessels:
-        width_and_color = average_width(connected_components, triplet, thr_img, rgb)
+        width_and_color = _average_width(connected_components, triplet, thr_img, rgb)
         red = [0, 0]
         blue = [0, 0]
         maxwidth = [-1, -1]
@@ -403,12 +403,12 @@ def postprocessing(connected_components: np.ndarray, thr_img: np.ndarray, bifurc
             pass
         else:
             if not(all(maxwidth[1] == [255, 255, 255])):
-                coloring(connected_components, triplet, maxwidth[1], rgb)
+                _coloring(connected_components, triplet, maxwidth[1], rgb)
 
     return rgb
 
 
-def accuracy(post_img: np.ndarray, segmented_img: np.ndarray, gt_img: np.ndarray):
+def _accuracy(post_img: np.ndarray, segmented_img: np.ndarray, gt_img: np.ndarray):
     counter = 0
     TN = 0
     FN = 0
@@ -437,9 +437,9 @@ def accuracy(post_img: np.ndarray, segmented_img: np.ndarray, gt_img: np.ndarray
 
 def classification(original_img: np.ndarray, manual_img):
     bifurcations, crossings = l.classification(manual_img.np_image, 0)
-    features, sectioned_img, thr_img, predict_img = loading_model(original_img, manual_img, None, 38)
-    validating_model(features, sectioned_img, original_img, predict_img, 38, 0)
+    features, sectioned_img, thr_img, predict_img = _loading_model(original_img, manual_img, None, 38)
+    _validating_model(features, sectioned_img, original_img, predict_img, 38, 0)
     connected_components = cv2.connectedComponentsWithStats(sectioned_img.astype(np.uint8), 4, cv2.CV_32S)
-    final_img, img_original = homogenize(connected_components)
-    post_img = postprocessing(connected_components, thr_img, bifurcations, img_original)
+    final_img, img_original = _homogenize(connected_components)
+    post_img = _postprocessing(connected_components, thr_img, bifurcations, img_original)
     return post_img
