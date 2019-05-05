@@ -43,5 +43,5 @@ def post_vessel_classification():
             segmented = Image.open(io.BytesIO(segmented)).convert('L')
             original = base64.b64decode(json["original_image"])
             original = Image.open(io.BytesIO(original)).convert('RGB')
-            data = vessel_classification.classification(np.array(segmented), np.array(original))
+            data = {"classification": vessel_classification.classification(np.array(segmented), np.array(original))}
     return flask.jsonify(data)
