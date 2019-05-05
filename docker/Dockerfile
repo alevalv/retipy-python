@@ -1,10 +1,33 @@
-FROM base/archlinux:2018.11.01
+FROM archlinux/base:latest
 
 LABEL maintainer="Alejandro Valdes <alejandrovaldes@live.com>"
 
 RUN echo 'Server = http://mirrors.udenar.edu.co/archlinux/$repo/os/$arch' > /etc/pacman.d/mirrorlist
 
-RUN pacman -Sy intel-tbb openexr gst-plugins-base libdc1394 cblas lapack libgphoto2 jasper ffmpeg cmake python-numpy python2-numpy mesa eigen hdf5 lapacke gtk3 vtk glew python-pip --noconfirm
+RUN pacman -Sy \
+    intel-tbb \
+    openexr \
+    gst-plugins-base \
+    libdc1394 \
+    cblas \
+    lapack \
+    libgphoto2 \
+    jasper \
+    ffmpeg \
+    cmake \
+    python-numpy \
+    python2-numpy \
+    mesa \
+    eigen \
+    hdf5 \
+    lapacke \
+    gtk3 \
+    vtk \
+    glew \
+    python-pip \
+    tensorflow \
+    python-tensorflow \
+    --noconfirm
 
 RUN pacman -Sy opencv --noconfirm
 
