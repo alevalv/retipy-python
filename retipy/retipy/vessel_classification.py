@@ -12,7 +12,7 @@ from retipy import landmarks as l
 _base_directory_training = 'retipy/resources/images/drive/training/'
 _base_directory_test = 'retipy/resources/images/drive/test/'
 _base_directory_postprocessing = 'retipy/resources/images/postprocessing/'
-_base_directory_model = 'retipy/resources/model/'
+_base_directory_model = os.path.join(os.path.dirname(__file__), 'model/')
 
 
 def _vessel_widths(center_img: np.ndarray, segmented_img: np.ndarray):
