@@ -104,7 +104,7 @@ class TestVesselClassification(TestCase):
         assert_array_equal(data[0:10], vectors[0:10], "Vectors does not match")
 
     def test_loading_model(self):
-        features, segments, thr, predictions = vc._loading_model(self.original, self.manual, self.av, 38)
+        features, segments, thr, predictions = vc._loading_model(self.original, self.manual.np_image, self.av, 38)
         result = np.genfromtxt(self._test_path + "loading_model_segments_test.csv", delimiter=',')
         result2 = np.genfromtxt(self._test_path + "loading_model_predictions_test.csv", delimiter=',')
 
@@ -112,17 +112,17 @@ class TestVesselClassification(TestCase):
         assert_array_equal(result2, predictions[:, 20], "Neural Network predictions does not match")
 
     def test_validating_model(self):
-        features, segments, thr, predictions = vc._loading_model(self.original, self.manual, self.av, 38)
+        features, segments, thr, predictions = vc._loading_model(self.original, self.manual.np_image, self.av, 38)
         acc = vc._validating_model(features, segments, self.original, predictions, 38, 1)
         self.assertEqual(76.18243243243244, acc,  "Wrong validation, should return 81.1214953271028")
 
     def test_validating_model_without_av(self):
-        features, segments, thr, predictions = vc._loading_model(self.original, self.manual, self.av, 38)
+        features, segments, thr, predictions = vc._loading_model(self.original, self.manual.np_image, self.av, 38)
         acc = vc._validating_model(features, segments, self.original, predictions, 38, 0)
         self.assertEqual(-1, acc,  "Wrong validation, should return -1")
 
     def test_homogenize(self):
-        features, segments, thr, predictions = vc._loading_model(self.original, self.manual, self.av, 38)
+        features, segments, thr, predictions = vc._loading_model(self.original, self.manual.np_image, self.av, 38)
         vc._validating_model(features, segments, self.original, predictions, 38, 1)
         connected_components = cv2.connectedComponentsWithStats(segments.astype(np.uint8), 4, cv2.CV_32S)
         final_img, rgb_img = vc._homogenize(connected_components)
@@ -132,7 +132,7 @@ class TestVesselClassification(TestCase):
 
     def test_box_labels(self):
         bifurcations, crossings = l.classification(self.manual.np_image, 0)
-        features, segments, thr, predictions = vc._loading_model(self.original, self.manual, self.av, 38)
+        features, segments, thr, predictions = vc._loading_model(self.original, self.manual.np_image, self.av, 38)
         connected_components = cv2.connectedComponentsWithStats(segments.astype(np.uint8), 4, cv2.CV_32S)
         connected_vessels = vc._box_labels(bifurcations, connected_components)
 
@@ -143,7 +143,7 @@ class TestVesselClassification(TestCase):
         self.assertEqual(7, vc._average([[1, 3, 4], [2, 5, 4], [3, 2, 3]]),  "Average width wrong calculated, should return 7")
 
     def test_average_width(self):
-        features, segments, thr, predictions = vc._loading_model(self.original, self.manual, self.av, 38)
+        features, segments, thr, predictions = vc._loading_model(self.original, self.manual.np_image, self.av, 38)
         connected_components = cv2.connectedComponentsWithStats(segments.astype(np.uint8), 4, cv2.CV_32S)
         bifurcations, crossings = l.classification(self.manual.np_image, 0)
         connected_vessels = vc._box_labels(bifurcations, connected_components)
@@ -156,7 +156,7 @@ class TestVesselClassification(TestCase):
         assert_array_equal(result, wc, "Width and color do not match")
 
     def test_normalize_indexes(self):
-        features, segments, thr, predictions = vc._loading_model(self.original, self.manual, self.av, 38)
+        features, segments, thr, predictions = vc._loading_model(self.original, self.manual.np_image, self.av, 38)
         connected_components = cv2.connectedComponentsWithStats(segments.astype(np.uint8), 4, cv2.CV_32S)
         normal = vc._normalize_indexes(connected_components, 7)
 
@@ -164,7 +164,7 @@ class TestVesselClassification(TestCase):
         assert_array_equal(result, normal, "Width and color do not match")
 
     def test_coloring(self):
-        features, segments, thr, predictions = vc._loading_model(self.original, self.manual, self.av, 38)
+        features, segments, thr, predictions = vc._loading_model(self.original, self.manual.np_image, self.av, 38)
         connected_components = cv2.connectedComponentsWithStats(segments.astype(np.uint8), 4, cv2.CV_32S)
         bifurcations, crossings = l.classification(self.manual.np_image, 0)
         connected_vessels = vc._box_labels(bifurcations, connected_components)
@@ -175,7 +175,7 @@ class TestVesselClassification(TestCase):
 
     def test_postprocessing(self):
         bifurcations, crossings = l.classification(self.manual.np_image, 0)
-        features, segments, thr, predictions = vc._loading_model(self.original, self.manual, self.av, 38)
+        features, segments, thr, predictions = vc._loading_model(self.original, self.manual.np_image, self.av, 38)
         vc._validating_model(features, segments, self.original, predictions, 38, 1)
         connected_components = cv2.connectedComponentsWithStats(segments.astype(np.uint8), 4, cv2.CV_32S)
         final_img, rgb_img = vc._homogenize(connected_components)
@@ -186,7 +186,7 @@ class TestVesselClassification(TestCase):
 
     def test_accuracy(self):
         bifurcations, crossings = l.classification(self.manual.np_image, 0)
-        features, segments, thr, predictions = vc._loading_model(self.original, self.manual, self.av, 38)
+        features, segments, thr, predictions = vc._loading_model(self.original, self.manual.np_image, self.av, 38)
         vc._validating_model(features, segments, self.original, predictions, 38, 1)
         connected_components = cv2.connectedComponentsWithStats(segments.astype(np.uint8), 4, cv2.CV_32S)
         final_img, rgb_img = vc._homogenize(connected_components)
@@ -197,7 +197,7 @@ class TestVesselClassification(TestCase):
         assert_array_equal([0.8447412353923205, 0.7686274509803922, 0.9011627906976745], acc, "Accuracy does not match")
 
     def test_classification(self):
-        post_img = vc.classification(self.original, self.manual)
+        post_img = vc.classification(self.original, self.manual.np_image)
 
         result = np.genfromtxt(self._test_path + "classification_test.csv", delimiter=',')
         assert_array_equal(result, post_img[:, 20], "Classificated image does not match")

@@ -186,7 +186,7 @@ def _feature_vectors():
     return features
 
 
-def _loading_model(original: np.ndarray, manual, av: np.ndarray, size: int):
+def _loading_model(original: np.ndarray, threshold: np.ndarray, av: np.ndarray, size: int):
     # Load model of the neuronal network
     json_file = open(_base_directory_model + 'modelVA.json', "r")
     loaded_model_json = json_file.read()
@@ -201,6 +201,7 @@ def _loading_model(original: np.ndarray, manual, av: np.ndarray, size: int):
     lab = cv2.cvtColor(original, cv2.COLOR_BGR2LAB)
     L, A, B = cv2.split(lab)
 
+    manual = retina.Retina(threshold, None)
     manual.threshold_image()
     thr_img = manual.get_uint_image()
     cv2.circle(thr_img, maxLoc, 60, 0, -1)
@@ -435,8 +436,8 @@ def _accuracy(post_img: np.ndarray, segmented_img: np.ndarray, gt_img: np.ndarra
     return [accy, sensitivity, specificity]
 
 
-def classification(original_img: np.ndarray, manual_img):
-    bifurcations, crossings = l.classification(manual_img.np_image, 0)
+def classification(original_img: np.ndarray, manual_img: np.ndarray):
+    bifurcations, crossings = l.classification(manual_img, 0)
     features, sectioned_img, thr_img, predict_img = _loading_model(original_img, manual_img, None, 38)
     _validating_model(features, sectioned_img, original_img, predict_img, 38, 0)
     connected_components = cv2.connectedComponentsWithStats(sectioned_img.astype(np.uint8), 4, cv2.CV_32S)
