@@ -97,7 +97,7 @@ class TestVesselClassification(TestCase):
 
     def test_feature_vectors(self):
         vectors = vc._feature_vectors()
-        h5f = h5py.File('retipy/resources/model/vector_features_interpolation.h5', 'r')
+        h5f = h5py.File('retipy/retipy/model/vector_features_interpolation.h5', 'r')
         data = h5f['training'][:]
         h5f.close()
 
@@ -113,19 +113,19 @@ class TestVesselClassification(TestCase):
 
     def test_validating_model(self):
         features, segments, thr, predictions = vc._loading_model(self.original, self.manual.np_image, self.av, 38)
-        acc = vc._validating_model(features, segments, self.original, predictions, 38, 1)
+        acc, rgb, network, original = vc._validating_model(features, segments, self.original, predictions, 38, 1)
         self.assertEqual(76.18243243243244, acc,  "Wrong validation, should return 81.1214953271028")
 
     def test_validating_model_without_av(self):
         features, segments, thr, predictions = vc._loading_model(self.original, self.manual.np_image, self.av, 38)
-        acc = vc._validating_model(features, segments, self.original, predictions, 38, 0)
+        acc, rgb, network, original = vc._validating_model(features, segments, self.original, predictions, 38, 0)
         self.assertEqual(-1, acc,  "Wrong validation, should return -1")
 
     def test_homogenize(self):
         features, segments, thr, predictions = vc._loading_model(self.original, self.manual.np_image, self.av, 38)
-        vc._validating_model(features, segments, self.original, predictions, 38, 1)
+        acc, rgb, network, original = vc._validating_model(features, segments, self.original, predictions, 38, 1)
         connected_components = cv2.connectedComponentsWithStats(segments.astype(np.uint8), 4, cv2.CV_32S)
-        final_img, rgb_img = vc._homogenize(connected_components)
+        final_img, rgb_img = vc._homogenize(connected_components, network, rgb, original)
 
         result = np.genfromtxt(self._test_path + "homogenize_test.csv", delimiter=',')
         assert_array_equal(result, rgb_img[:, 20], "Homogenized image does not match")
@@ -147,7 +147,8 @@ class TestVesselClassification(TestCase):
         connected_components = cv2.connectedComponentsWithStats(segments.astype(np.uint8), 4, cv2.CV_32S)
         bifurcations, crossings = l.classification(self.manual.np_image, 0)
         connected_vessels = vc._box_labels(bifurcations, connected_components)
-        final_img, rgb_img = vc._homogenize(connected_components)
+        acc, rgb, network, original = vc._validating_model(features, segments, self.original, predictions, 38, 1)
+        final_img, rgb_img = vc._homogenize(connected_components, network, rgb, original)
         widths_colors = vc._average_width(connected_components, connected_vessels[0], thr, rgb_img)
         wc = [widths_colors[2]]
         wc.extend(widths_colors[3])
@@ -168,7 +169,8 @@ class TestVesselClassification(TestCase):
         connected_components = cv2.connectedComponentsWithStats(segments.astype(np.uint8), 4, cv2.CV_32S)
         bifurcations, crossings = l.classification(self.manual.np_image, 0)
         connected_vessels = vc._box_labels(bifurcations, connected_components)
-        final_img, rgb_img = vc._homogenize(connected_components)
+        acc, rgb, network, original = vc._validating_model(features, segments, self.original, predictions, 38, 1)
+        final_img, rgb_img = vc._homogenize(connected_components, network, rgb, original)
         rgb = vc._coloring(connected_components, connected_vessels[0], [0, 0, 255], rgb_img)
 
         assert_array_equal([0, 0, 255], rgb, "Coloring does not match")
@@ -176,9 +178,9 @@ class TestVesselClassification(TestCase):
     def test_postprocessing(self):
         bifurcations, crossings = l.classification(self.manual.np_image, 0)
         features, segments, thr, predictions = vc._loading_model(self.original, self.manual.np_image, self.av, 38)
-        vc._validating_model(features, segments, self.original, predictions, 38, 1)
+        acc, rgb, network, original = vc._validating_model(features, segments, self.original, predictions, 38, 1)
         connected_components = cv2.connectedComponentsWithStats(segments.astype(np.uint8), 4, cv2.CV_32S)
-        final_img, rgb_img = vc._homogenize(connected_components)
+        final_img, rgb_img = vc._homogenize(connected_components, network, rgb, original)
         post_img = vc._postprocessing(connected_components, thr, bifurcations, rgb_img)
 
         result = np.genfromtxt(self._test_path + "postprocessing_test.csv", delimiter=',')
@@ -187,9 +189,9 @@ class TestVesselClassification(TestCase):
     def test_accuracy(self):
         bifurcations, crossings = l.classification(self.manual.np_image, 0)
         features, segments, thr, predictions = vc._loading_model(self.original, self.manual.np_image, self.av, 38)
-        vc._validating_model(features, segments, self.original, predictions, 38, 1)
+        acc, rgb, network, original = vc._validating_model(features, segments, self.original, predictions, 38, 1)
         connected_components = cv2.connectedComponentsWithStats(segments.astype(np.uint8), 4, cv2.CV_32S)
-        final_img, rgb_img = vc._homogenize(connected_components)
+        final_img, rgb_img = vc._homogenize(connected_components, network, rgb, original)
 
         post_img = vc._postprocessing(connected_components, thr, bifurcations, rgb_img)
         acc = vc._accuracy(post_img, segments, self.av)

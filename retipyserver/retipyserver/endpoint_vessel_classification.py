@@ -26,6 +26,7 @@ import io
 import numpy as np
 from PIL import Image
 from retipy import vessel_classification
+from retipy.retina import Retina
 from . import app
 from . import base_url
 
@@ -44,6 +45,8 @@ def post_vessel_classification():
             original = base64.b64decode(json["original_image"])
             original = Image.open(io.BytesIO(original)).convert('RGB')
             data = {
-                "classification": vessel_classification.classification(
-                    np.array(original), np.array(segmented))}
+                "classification": Retina.get_base64_image(
+                    vessel_classification.classification(
+                        np.array(original), np.array(segmented)),
+                    False)}
     return flask.jsonify(data)

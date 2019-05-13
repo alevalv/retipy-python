@@ -44,8 +44,11 @@ class Retina(object):
         return io.imread(img_path)
 
     @staticmethod
-    def get_base64_image(image: np.ndarray):
-        temp_image = Image.fromarray(image.astype('uint8'), 'L')
+    def get_base64_image(image: np.ndarray, is_luminance: bool = True):
+        if is_luminance:
+            temp_image = Image.fromarray(image.astype('uint8'), 'L')
+        else:
+            temp_image = Image.fromarray(image)
         buffer = BytesIO()
         temp_image.save(buffer, format="png")
         return str(base64.b64encode(buffer.getvalue()).decode('utf-8'))

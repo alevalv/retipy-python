@@ -11,7 +11,6 @@ from retipy import landmarks as l
 
 _base_directory_training = 'retipy/resources/images/drive/training/'
 _base_directory_test = 'retipy/resources/images/drive/test/'
-_base_directory_postprocessing = 'retipy/resources/images/postprocessing/'
 _base_directory_model = os.path.join(os.path.dirname(__file__), 'model/')
 
 
@@ -225,6 +224,9 @@ def _loading_model(original: np.ndarray, threshold: np.ndarray, av: np.ndarray, 
 
 def _validating_model(features: np.ndarray, skeleton_img: np.ndarray, original_img: np.ndarray, predicted_img: np.ndarray, size: int, av: int):
     max_acc = -1
+    rgb_prediction = []
+    network_prediction = []
+    original = []
     if av == 0:
         manual_copy = retina.Retina(skeleton_img, None)
         manual_copy.bin_to_bgr()
@@ -245,9 +247,9 @@ def _validating_model(features: np.ndarray, skeleton_img: np.ndarray, original_i
                 manual_copy[features[row, 0], features[row, 1]] = [255, 0, 0]
                 original_copy[features[row, 0], features[row, 1]] = [255, 0, 0]
 
-        cv2.imwrite(_base_directory_postprocessing + "rgb_prediction.png", manual_copy)
-        cv2.imwrite(_base_directory_postprocessing + "network_prediction.png", predict_copy)
-        cv2.imwrite(_base_directory_postprocessing + "original.png", original_copy)
+        rgb_prediction = manual_copy
+        network_prediction = predict_copy
+        original = original_copy
     else:
         for i in range(0, 1000):
             manual_copy = retina.Retina(skeleton_img, None)
@@ -286,19 +288,22 @@ def _validating_model(features: np.ndarray, skeleton_img: np.ndarray, original_i
             accy = (100 * (true_positive+true_negative)) / features.shape[0]
             if max_acc < accy:
                 max_acc = accy
-                cv2.imwrite(_base_directory_postprocessing + "rgb_prediction.png", manual_copy)
-                cv2.imwrite(_base_directory_postprocessing + "network_prediction.png", predict_copy)
-                cv2.imwrite(_base_directory_postprocessing + "original.png", original_copy)
+                rgb_prediction = manual_copy
+                network_prediction = predict_copy
+                original = original_copy
 
-    return max_acc
+    return max_acc, rgb_prediction, network_prediction, original
 
 
-def _homogenize(connected_components: np.ndarray):
+def _homogenize(connected_components: np.ndarray,
+                network_prediction: np.ndarray,
+                rgb_prediction: np.ndarray,
+                original: np.ndarray):
     # Imagen en con 0, 1, 2
-    result_image = cv2.imread(_base_directory_postprocessing + "network_prediction.png", 0)
+    result_image = network_prediction.copy()
     # Imagen a color del resultado de la red
-    final_image = cv2.imread(_base_directory_postprocessing + "rgb_prediction.png", 1)
-    img_rgb = cv2.imread(_base_directory_postprocessing + "original.png", 1)
+    final_image = rgb_prediction.copy()
+    img_rgb = original.copy()
 
     for x in range(1, connected_components[0]):
         mask = connected_components[1] != x
@@ -437,10 +442,11 @@ def _accuracy(post_img: np.ndarray, segmented_img: np.ndarray, gt_img: np.ndarra
 
 
 def classification(original_img: np.ndarray, manual_img: np.ndarray):
-    bifurcations, crossings = l.classification(manual_img, 0)
-    features, sectioned_img, thr_img, predict_img = _loading_model(original_img, manual_img, None, 38)
-    _validating_model(features, sectioned_img, original_img, predict_img, 38, 0)
+    manual = manual_img
+    bifurcations, crossings = l.classification(manual, 0)
+    features, sectioned_img, thr_img, predict_img = _loading_model(original_img, manual, None, 38)
+    acc, rgb, network, original = _validating_model(features, sectioned_img, original_img, predict_img, 38, 0)
     connected_components = cv2.connectedComponentsWithStats(sectioned_img.astype(np.uint8), 4, cv2.CV_32S)
-    final_img, img_original = _homogenize(connected_components)
+    final_img, img_original = _homogenize(connected_components, network, rgb, original)
     post_img = _postprocessing(connected_components, thr_img, bifurcations, img_original)
     return post_img
