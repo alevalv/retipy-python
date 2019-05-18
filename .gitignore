@@ -8,4 +8,6 @@ dist/
 .directory
 **/.ropeproject
 **/.pytest_cache
-
+drive/
+DRIVE/
+drive
